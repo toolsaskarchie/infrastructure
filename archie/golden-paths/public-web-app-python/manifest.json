@@ -1,0 +1,129 @@
+{
+  "archie_golden_path": {
+    "category": "web",
+    "description": "A Lambda function that serves a Python request handler over a public HTTPS function URL, with a customer-managed KMS key and 30-day log retention. Your app exposes `handler.handler` (a `handler.py` with a `handler(event, context)` returning statusCode/headers/body). A real domain can be put in front of it later via CloudFront without rebuilding.",
+    "for_when": "Somewhere to put a web page or small web app so people can just open a link \u2014 a marketing page, a preview for review before launch, a request-shaped Python service that needs a public HTTPS address. Bring a repo with a handler.py.",
+    "id": "gp-application-stack-8da7a5fd",
+    "name": "Public Web App (Python)",
+    "not_for": "Not for anything that must run as a container or an always-on server, not for anything holding state on disk, and not for non-Python apps \u2014 the entrypoint and runtime are pinned on this path.",
+    "version": "1.0.0"
+  },
+  "components": [
+    {
+      "blueprint_id": "bp-ec3d97f4af7f",
+      "blueprint_name": "KMS Key",
+      "config": {},
+      "id": "kms",
+      "state_key_hint": "tf-native-state/<tenant>/<app>-kms-<env>/terraform.tfstate",
+      "version": "1.0.0"
+    },
+    {
+      "blueprint_id": "bp-c8a30dfe442e",
+      "blueprint_name": "Lambda Function",
+      "config": {
+        "authorization_type": "<redacted>",
+        "create_lambda_function_url": true,
+        "handler": "handler.handler",
+        "runtime": "python3.12"
+      },
+      "id": "application",
+      "state_key_hint": "tf-native-state/<tenant>/<app>-application-<env>/terraform.tfstate",
+      "version": "1.0.0"
+    }
+  ],
+  "config": {},
+  "deploy_order": [
+    "kms",
+    "application"
+  ],
+  "exported_by": "archie",
+  "note": "Archie is the source of truth for this path. This directory is a projection of it, so that the infrastructure remains yours and runnable if Archie goes away. Editing these files does not change the path.",
+  "open_fields": [
+    {
+      "component": "application",
+      "input": "function_name",
+      "type": "text"
+    },
+    {
+      "component": "kms",
+      "input": "tags",
+      "type": "map"
+    }
+  ],
+  "wiring": [
+    {
+      "component": "kms",
+      "inputs": [
+        {
+          "from": null,
+          "how": "governed",
+          "input": "tags",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "map(string)",
+          "type": "map",
+          "value": {
+            "ManagedBy": "Archie"
+          }
+        }
+      ]
+    },
+    {
+      "component": "application",
+      "inputs": [
+        {
+          "from": null,
+          "how": "unsatisfied",
+          "input": "function_name",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "string",
+          "type": "text",
+          "value": null
+        },
+        {
+          "from": null,
+          "how": "governed",
+          "input": "tags",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "map(string)",
+          "type": "map",
+          "value": {
+            "ManagedBy": "Archie"
+          }
+        },
+        {
+          "from": "kms.key_arn",
+          "how": "inferred",
+          "input": "s3_kms_key_id",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "string",
+          "type": "text",
+          "value": null
+        },
+        {
+          "from": "kms.key_arn",
+          "how": "inferred",
+          "input": "cloudwatch_logs_kms_key_id",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "string",
+          "type": "text",
+          "value": null
+        },
+        {
+          "from": "kms.key_arn",
+          "how": "inferred",
+          "input": "kms_key_arn",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "string",
+          "type": "text",
+          "value": null
+        }
+      ]
+    }
+  ]
+}
