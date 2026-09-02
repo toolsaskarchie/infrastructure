@@ -1,11 +1,11 @@
 {
   "archie_golden_path": {
     "category": "web",
-    "description": "Publishes a request-shaped application as a Lambda function with a public HTTPS function URL, plus an owned KMS key with automatic rotation. No load balancer and no VPC. Putting a real domain on it later means CloudFront in front of the function URL, with no rebuild.",
-    "for_when": "You have an application that needs a public link anyone on the team can open \u2014 a marketing page, a launch site, a small request-shaped service \u2014 and you want that link to survive a later move onto a real domain.",
+    "description": "Publishes a Python request handler as a Lambda function with a public HTTPS function URL, plus an owned KMS key with automatic rotation. No load balancer and no VPC. Runtime is pinned to python3.12 and the entrypoint to handler.handler, so the application must expose handler(event, context) in handler.py at the package root. Putting a real domain on it later means CloudFront in front of the function URL, with no rebuild.",
+    "for_when": "You have a Python request handler that needs a public link anyone on the team can open \u2014 a marketing page, a launch site, a small request-shaped service \u2014 and you want that link to survive a later move onto a real domain.",
     "id": "gp-application-stack-625e3611",
     "name": "Public Web App - Lambda Function URL",
-    "not_for": "Not for anything that must run as a container or hold state, and not for long-running background workloads \u2014 use a container path for those.",
+    "not_for": "Not for anything that must run as a container or hold state, and not for long-running background workloads. Also not for other languages or entrypoints: this path pins runtime python3.12 and handler handler.handler, so a Node, Go or Java application cannot use it.",
     "version": "1.0.0"
   },
   "components": [
@@ -21,7 +21,9 @@
       "blueprint_id": "bp-49a7f795f953",
       "blueprint_name": "Lambda Function",
       "config": {
-        "create_lambda_function_url": true
+        "create_lambda_function_url": true,
+        "handler": "handler.handler",
+        "runtime": "python3.12"
       },
       "id": "application",
       "state_key_hint": "tf-native-state/<tenant>/<app>-application-<env>/terraform.tfstate",
@@ -39,16 +41,6 @@
     {
       "component": "application",
       "input": "function_name",
-      "type": "text"
-    },
-    {
-      "component": "application",
-      "input": "handler",
-      "type": "text"
-    },
-    {
-      "component": "application",
-      "input": "runtime",
       "type": "text"
     },
     {
