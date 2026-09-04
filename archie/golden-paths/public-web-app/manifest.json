@@ -1,11 +1,11 @@
 {
   "archie_golden_path": {
     "category": "",
-    "description": "A request-shaped web app published on a public HTTPS URL, with encrypted logs. Lambda function with a function URL, plus a KMS key for log encryption. A real domain can be put in front later without rebuilding.",
-    "for_when": "Somewhere to put a web page or small web app so anyone can open it in a browser \u2014 a marketing page, a preview for the team, a small HTTP service \u2014 where a real domain may be added later.",
+    "description": "A Python request handler published on a public HTTPS URL, with encrypted logs. Lambda function with a function URL, plus a KMS key for log encryption. Pinned to the python3.12 runtime with entrypoint handler.handler. A real domain can be put in front later without rebuilding.",
+    "for_when": "Somewhere to put a Python web page or small web app so anyone can open it in a browser \u2014 a marketing page, a preview for the team, a small HTTP service \u2014 where a real domain may be added later. The application must expose handler(event, context) in handler.py.",
     "id": "gp-application-stack-f842e77c",
     "name": "Public Web App",
-    "not_for": "Not for an application that only ships as a container, and not for anything that has to hold state between requests.",
+    "not_for": "Not for anything that is not Python 3.12, and not for an application whose entrypoint is not handler.handler \u2014 the runtime and entrypoint are pinned on this path, so a Node or Go app will not run on it. Not for an application that only ships as a container, and not for anything that has to hold state between requests.",
     "version": "1.0.0"
   },
   "components": [
@@ -45,7 +45,9 @@
       "blueprint_id": "bp-799d19ad49d7",
       "blueprint_name": "Lambda Function",
       "config": {
-        "create_lambda_function_url": true
+        "create_lambda_function_url": true,
+        "handler": "handler.handler",
+        "runtime": "python3.12"
       },
       "id": "application",
       "state_key_hint": "tf-native-state/<tenant>/<app>-application-<env>/terraform.tfstate",
@@ -63,16 +65,6 @@
     {
       "component": "application",
       "input": "function_name",
-      "type": "text"
-    },
-    {
-      "component": "application",
-      "input": "handler",
-      "type": "text"
-    },
-    {
-      "component": "application",
-      "input": "runtime",
       "type": "text"
     },
     {
