@@ -46,6 +46,7 @@
       "blueprint_name": "Lambda Function",
       "config": {
         "create_lambda_function_url": true,
+        "function_name": "claude-test-quotes",
         "handler": "handler.handler",
         "runtime": "python3.12"
       },
