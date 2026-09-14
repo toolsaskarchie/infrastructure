@@ -1,0 +1,283 @@
+{
+  "archie_golden_path": {
+    "category": "",
+    "description": "Composed from: A managed EKS Kubernetes cluster running in its own dedicated VPC network.",
+    "for_when": "a managed EKS Kubernetes cluster running in its own dedicated VPC network",
+    "id": "gp-eks-cluster-a9df5bcc",
+    "name": "EKS Cluster",
+    "not_for": "",
+    "version": "1.0.0"
+  },
+  "components": [
+    {
+      "blueprint_id": "bp-7d8dab2da719",
+      "blueprint_name": "KMS Key",
+      "config": {
+        "key_statements": [
+          {
+            "actions": [
+              "kms:Encrypt",
+              "kms:Decrypt",
+              "kms:ReEncrypt*",
+              "kms:GenerateDataKey*",
+              "kms:DescribeKey"
+            ],
+            "principals": [
+              {
+                "identifiers": [
+                  "eks.amazonaws.com",
+                  "elasticache.amazonaws.com",
+                  "logs.us-east-1.amazonaws.com",
+                  "sqs.amazonaws.com"
+                ],
+                "type": "Service"
+              }
+            ],
+            "resources": [
+              "*"
+            ],
+            "sid": "ArchieAllowServiceUse"
+          },
+          {
+            "actions": [
+              "kms:CreateGrant",
+              "kms:ListGrants",
+              "kms:RevokeGrant"
+            ],
+            "conditions": [
+              {
+                "test": "Bool",
+                "values": [
+                  "true"
+                ],
+                "variable": "kms:GrantIsForAWSResource"
+              }
+            ],
+            "principals": [
+              {
+                "identifiers": [
+                  "eks.amazonaws.com",
+                  "elasticache.amazonaws.com",
+                  "logs.us-east-1.amazonaws.com"
+                ],
+                "type": "Service"
+              }
+            ],
+            "resources": [
+              "*"
+            ],
+            "sid": "ArchieAllowServiceGrants"
+          }
+        ]
+      },
+      "id": "kms",
+      "state_key_hint": "tf-native-state/<tenant>/<app>-kms-<env>/terraform.tfstate",
+      "version": "1.0.0"
+    },
+    {
+      "blueprint_id": "bp-b4a07ad30d98",
+      "blueprint_name": "VPC",
+      "config": {
+        "create_vpc": true
+      },
+      "id": "vpc",
+      "state_key_hint": "tf-native-state/<tenant>/<app>-vpc-<env>/terraform.tfstate",
+      "version": "1.0.0"
+    },
+    {
+      "blueprint_id": "bp-f141f33fbd2b",
+      "blueprint_name": "EKS Cluster",
+      "config": {
+        "control_plane_subnet_ids": "${vpc.private_subnets}",
+        "create_iam_role": true,
+        "endpoint_private_access": true,
+        "endpoint_public_access": false,
+        "endpoint_public_access_cidrs": []
+      },
+      "id": "eks",
+      "state_key_hint": "tf-native-state/<tenant>/<app>-eks-<env>/terraform.tfstate",
+      "version": "1.0.0"
+    }
+  ],
+  "config": {},
+  "deploy_order": [
+    "kms",
+    "vpc",
+    "eks"
+  ],
+  "exported_by": "archie",
+  "note": "Archie is the source of truth for this path. This directory is a projection of it, so that the infrastructure remains yours and runnable if Archie goes away. Editing these files does not change the path.",
+  "open_fields": [
+    {
+      "component": "vpc",
+      "input": "name",
+      "type": "text"
+    },
+    {
+      "component": "eks",
+      "input": "name",
+      "type": "text"
+    },
+    {
+      "component": "kms",
+      "input": "tags",
+      "type": "map"
+    }
+  ],
+  "wiring": [
+    {
+      "component": "kms",
+      "inputs": [
+        {
+          "from": null,
+          "how": "governed",
+          "input": "tags",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "map(string)",
+          "type": "map",
+          "value": {
+            "ManagedBy": "Archie"
+          }
+        }
+      ]
+    },
+    {
+      "component": "vpc",
+      "inputs": [
+        {
+          "from": null,
+          "how": "supplied",
+          "input": "azs",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "list(string)",
+          "type": "list",
+          "value": [
+            "us-east-1a",
+            "us-east-1b"
+          ]
+        },
+        {
+          "from": null,
+          "how": "unsatisfied",
+          "input": "name",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "string",
+          "type": "text",
+          "value": null
+        },
+        {
+          "from": null,
+          "how": "governed",
+          "input": "tags",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "map(string)",
+          "type": "map",
+          "value": {
+            "ManagedBy": "Archie"
+          }
+        },
+        {
+          "from": "kms.key_arn",
+          "how": "inferred",
+          "input": "flow_log_cloudwatch_log_group_kms_key_id",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "string",
+          "type": "text",
+          "value": null
+        }
+      ]
+    },
+    {
+      "component": "eks",
+      "inputs": [
+        {
+          "from": null,
+          "how": "governed",
+          "input": "tags",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "map(string)",
+          "type": "map",
+          "value": {
+            "ManagedBy": "Archie"
+          }
+        },
+        {
+          "from": null,
+          "how": "unsatisfied",
+          "input": "name",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "string",
+          "type": "text",
+          "value": null
+        },
+        {
+          "from": null,
+          "how": "unsatisfied",
+          "input": "control_plane_subnet_ids",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "list(string)",
+          "type": "list",
+          "value": null
+        },
+        {
+          "from": "vpc.private_subnets",
+          "how": "inferred",
+          "input": "subnet_ids",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "list(string)",
+          "type": "list",
+          "value": null
+        },
+        {
+          "from": null,
+          "how": "unsatisfied",
+          "input": "endpoint_public_access_cidrs",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "list(string)",
+          "type": "list",
+          "value": null
+        },
+        {
+          "from": "kms.key_arn",
+          "how": "inferred",
+          "input": "cloudwatch_log_group_kms_key_id",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "string",
+          "type": "text",
+          "value": null
+        },
+        {
+          "from": "vpc.vpc_id",
+          "how": "exact",
+          "input": "vpc_id",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "string",
+          "type": "text",
+          "value": null
+        },
+        {
+          "from": "vpc.default_security_group_id",
+          "how": "inferred",
+          "input": "security_group_id",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "string",
+          "type": "text",
+          "value": null
+        }
+      ]
+    }
+  ]
+}
