@@ -78,8 +78,20 @@
       "blueprint_id": "bp-6948138cc51a",
       "blueprint_name": "VPC",
       "config": {
+        "azs": [
+          "us-east-1a",
+          "us-east-1b"
+        ],
         "cidr": "10.44.0.0/16",
-        "create_vpc": true
+        "create_vpc": true,
+        "private_subnets": [
+          "10.44.10.0/24",
+          "10.44.11.0/24"
+        ],
+        "public_subnets": [
+          "10.44.1.0/24",
+          "10.44.2.0/24"
+        ]
       },
       "id": "vpc",
       "state_key_hint": "tf-native-state/<tenant>/<app>-vpc-<env>/terraform.tfstate",
