@@ -25,9 +25,7 @@ module "this" {
   eks_managed_node_groups = var.eks_managed_node_groups
   tags = var.tags
   kubernetes_version = var.kubernetes_version
-  endpoint_public_access = var.endpoint_public_access
   control_plane_egress_mode = var.control_plane_egress_mode
-  endpoint_private_access = var.endpoint_private_access
   kms_key_administrators = var.kms_key_administrators
   name = var.name
   identity_providers = var.identity_providers
@@ -495,22 +493,10 @@ variable "kubernetes_version" {
   default     = null
 }
 
-variable "endpoint_public_access" {
-  description = "Indicates whether or not the Amazon EKS public API server endpoint is enabled"
-  type        = bool
-  default     = false
-}
-
 variable "control_plane_egress_mode" {
   description = "Egress mode for the EKS control plane. Valid values are `AWS_MANAGED` and `CUSTOMER_ROUTED`"
   type        = string
   default     = null
-}
-
-variable "endpoint_private_access" {
-  description = "Indicates whether or not the Amazon EKS private API server endpoint is enabled"
-  type        = bool
-  default     = true
 }
 
 variable "kms_key_administrators" {
