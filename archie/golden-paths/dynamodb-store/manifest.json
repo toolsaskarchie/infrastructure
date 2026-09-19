@@ -21,7 +21,8 @@
       "blueprint_id": "bp-8714672f855b",
       "blueprint_name": "Dynamodb Table",
       "config": {
-        "create_table": true
+        "create_table": true,
+        "name": "key-value-store"
       },
       "id": "dynamodb",
       "state_key_hint": "tf-native-state/<tenant>/<app>-dynamodb-<env>/terraform.tfstate",
