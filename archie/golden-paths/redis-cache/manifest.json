@@ -73,7 +73,10 @@
     {
       "blueprint_id": "bp-94b434957896",
       "blueprint_name": "VPC",
-      "config": {},
+      "config": {
+        "enable_nat_gateway": true,
+        "single_nat_gateway": true
+      },
       "id": "vpc",
       "state_key_hint": "tf-native-state/<tenant>/<app>-vpc-<env>/terraform.tfstate",
       "version": "1.0.0"
@@ -82,7 +85,12 @@
       "blueprint_id": "bp-3d2a07b66135",
       "blueprint_name": "Elasticache Cluster",
       "config": {
-        "create_replication_group": true
+        "preferred_availability_zones": [
+          "us-east-1a"
+        ],
+        "preferred_cache_cluster_azs": [
+          "us-east-1a"
+        ]
       },
       "id": "redis",
       "state_key_hint": "tf-native-state/<tenant>/<app>-redis-<env>/terraform.tfstate",
@@ -102,16 +110,6 @@
       "component": "vpc",
       "input": "name",
       "type": "text"
-    },
-    {
-      "component": "redis",
-      "input": "preferred_cache_cluster_azs",
-      "type": "list"
-    },
-    {
-      "component": "redis",
-      "input": "preferred_availability_zones",
-      "type": "list"
     },
     {
       "component": "redis",
