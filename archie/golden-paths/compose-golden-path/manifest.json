@@ -1,0 +1,562 @@
+{
+  "archie_golden_path": {
+    "category": "",
+    "description": "Composed from: Compose a golden path: a VPC network, an ECS Fargate service behind an Application Load Balancer, and an RDS Postgres database with encryption. AWS, nonprod.",
+    "for_when": "compose a golden path",
+    "id": "gp-compose-golden-path-4df6ad2c",
+    "name": "Compose Golden Path",
+    "not_for": "",
+    "version": "1.0.0"
+  },
+  "components": [
+    {
+      "blueprint_id": "bp-fb6aa894a5f1",
+      "blueprint_name": "Kubernetes Workload",
+      "config": {
+        "ingress_enabled": true,
+        "user_data": "#cloud-boothook\n#!/bin/bash\n# Runs on EVERY boot (unlike user_data, which cloud-init runs once per instance).\n# Serves with preinstalled python3: this subnet has no NAT and no IGW, so any\n# package install would fail regardless of how the script got here.\nset -x\nexec >> /var/log/archie-demo.log 2>&1\nD=/opt/demo\nmkdir -p $D\nT=$(curl -s -X PUT --max-time 3 'http://169.254.169.254/latest/api/token' \\\n    -H 'X-aws-ec2-metadata-token-ttl-seconds: 60')\nI=$(curl -s --max-time 3 -H \"X-aws-ec2-metadata-token: $T\" \\\n    http://169.254.169.254/latest/meta-data/instance-id)\nZ=$(curl -s --max-time 3 -H \"X-aws-ec2-metadata-token: $T\" \\\n    http://169.254.169.254/latest/meta-data/placement/availability-zone)\n\ncat > $D/logo.svg.gz.b64 <<'ARCHIE_LOGO'\nH4sIAGebjWoC/42bS68dt5WF5/kVhduTGMgt8f1oWAHcg8YdSIMz0UAzo6NIBhQ7sIUoP7+/xXqQdQ5lR4Z8fatYLHI/1l57sfz9b//6uPz7H59//u3106cvX/75369eff36df3q119+/fjKGWNeMeJp+ddPH77+zy//fv1kFrOEkFZjFxv5YZ6Wrz/97cun10/b1afl04efPn768vrpuP33nz5/fv308y8/f3j665+W5fuPy5dff/z5t7//8us/Xj+1//z845cPf3Yabf6y/fhu+e3/fvz84c9mLSZm8117kmf/+eOXT8vfXj+9XUJebV6sX0v1yw+LDWvZ/qUF2iXzpD1uv1msiav3YYl1zSYxPq2x/d1GW2NWG7yesrYwvmRefP7+wxIZGs/hxa8h1CXltebK6OTXHJbguOrb3Kb93f6JYXXnzTeLD2v09nj2fmbPC3Pu67Csw+e+jrtluzWFdGzq/WHq//rf9ufp1YPRCqsqdg1xm8uFvP97ny+tycYlxzVlvT3mNbCxytqx9Q9L4PFwbiyZNfLa/a5sbFefzsenLzB1reVYwpvz94jPZbmypvb3GB3YX9YbahueeJWpi7Vm9SYwvrKYui/ILhE7ZnvefiP3e++P5++nb8bY3txNl0sy3zSdNXmNv287GSGPxsNva/y29Y7b3XzHDL9jv2MdpwGttav9HQtai5UuJvSJn9824X77NOExwcyGx8vnRvz+1cf2o1lymvjWl9Wm+JeWhMZ/99QMTi4nm42ruUSQxBHzJFm44dycnA/ecduWvF9nJc44riRvSqye689Y2IfA4yYHp6E3IjO45dmCDUzM+FCChoY1OHN92BMzNcTonXNJ77/51dYyvvg5sV4GmeBq0oXHEYXMrH3EZA6MFy+LZDEp1uRSBSdcBAw1CoRxOeUKiHitMNx4uTPVmhRCG8iguPJ7NLnoVxxWMVz2xZXtNojpja37DPEGfJjE9oJ1xFHbNdHoQy3lMANRHWN4uP7iADVb9lfdLr8tz84IlkyIgVhurnMeZxoXfTWpjXB43FV37vLGCGNwjUbmWky2rmyDHelgQw05mprlCY3CYT7GHKvLGXPmdOOlweVSIzvc7eEi1raEQG4eDEoUwiRUjyl92h3wOOqGIUu1YzTMphKuFxuML31YWG1k7sgAE/C4k5GTidbivHjYhyhwfti9gBwDWvAi7Y5g18aw6WJc22B8ATpKHkL0pqD1Pvv2ou3lvuLt03IgB3FkbLCp+YFS8Ux5Lc54RRh25sFyU/bVMdGeXWVraYwtopTQMRRTwmF7HaUq2TFD0s3KLZ6kqu7Yq7drra7ZvRCMzLBl3H7jRiSwv2xMKv7IvO0RTE605wo+71HDGyOMpK/0xkJtDCVXX48k4JIJkIYKbWhXeKpgNse4IxOcMDU6bhvb8jDdvFtjodTaKPMcbgrBBeOK3y9NBoGLRMU7s5oXFkyADx5644RhtmfTc1hzZEs27ntS2NeICYnkFtsNeGKygxeVGdYBI851BzFmzGSnTB7SFoSjPgzJT3YUR8yRMlt6BMEjt4LT21v6h3pjN5GfI6iws5QwAeEQ2npwpaGEnJhG1lJvfSmx4Isd54QbrGiA2A2lv4Hq79+qfLLAeIDgcwTwaiRObd6nJISIwBSd3yLofsTC6omFwa1eEE3chrwlrf5EIYVSVJ7aH2QUgz3Pmj1oSL/EQweiQdZcZtP1QEpZPJYabAlHnIH1lRTu0K40DyzQ+COH8YuoCXBFyG7R6BUCOHewlEoC2UTt3kGkTQUgXd5GRbCRUS7XzebvdMlhkeLNtu4XED9wz8SUmu8EbIQFRD3nc0V3D8lFPlncX7ozwKccWS5Vck/gm97vO14JwfIF860sFEtitxvK2bYz4qYHdytBPriU0v6ULBT9xTuPY/AzqNcTczINweJKD5aGwqy0EMtHrcM4oA4GDMHu5mFPBWZv8l7zFRmxED69dgn2vR1AQSwg9qwPCjHsTGHqsUmzMAnXPwr5928jsIuXTcGN26o3EkSnVQH+AY639ArEiRx3ZqLyN4VLbtpbMMLcXn2AExMu7AdGRiXpYeoFXSxzyC24DHyCOTtYpJZIxNERFV55NdAfea4Ibs43vYQoRwVv7e6qG1dCwigscEdAsSiCP5e8u47tY3wfDkviyixPYs49gZuFSFhfajrSSpWP+71ihqKizn1bG5AWjQEkN7hgjqoCcHEQN8Zqg3+A01C/cf8WXau2I997nIMSYGvnRuJ1qVvI2Buk3MAOErX2ACTCsl7yWMQdkkRuHYvNq2fj8aS+dKTQKr/vdSOnNrOyYnZ4WCZjqKa+DhV9No9ADU8M5YbVwLEGBAst93lJZpt25143WuOo6n+SnG1Ypjns9Q/70NGZCH4bhUjZwMZk2Ec5fHnDE3DOIaaV8ekC0LiTPB4gi8IKIzkqIv4GEawdGBUjYA0jECtck3Z51ENiHkSwaRxFhmnNl6qpUblc57LqOu4ZfKGd6oPczdPcuytDADjoIcapyNesvO9NRGPsOQ02ykrYjGHHOKJk1kZs97knQ8TV6xh9s3lgOlUxcTCShWXj04Fn4lqXlS09TBoQMcvQo8DelNUdMbCk7HiukKZUPDCz+V4yle0kYSd9NNYHjYz0BbD2AUIP6hmVaUPVH56potYOT4aGHmVbWFBnQqXcKyCttMjG2CUAOhSgoXYl2mccc7zbaPkYNLhO/l9IFpXE7s6W8PVKLkQUDZFX9raFrKBk97Bo3J4Q49pZygU/cMl0MXBUQ9dhQ12TjdH25uQy4NYwsoyoeT8FWYO3MPkZRG0hLIOas5eyJFRn7Rc81pYUn6dFl9kg0hhLDNE3G6SGPo92JyCSxzGGjGsVsg2i6beXDioLuNxZ7NVDhl6+2Ds0FdJ3vDxtCUN0JvUF2n8oN2wIfo8cQaOYaKhYeEJocPY/to2R3ZyteRcYotpOd1pRGQzPONnbEguoD1ba8+WtqafbxPbUw0ZI0i2pV/MDjwgNMpijLztKCCrE18BHnhs59wNdTEGl+DpGFc2OLd5kEF0EDcJWFWeTsJjysJgEfLjTYPANyzvwBDc2tGBf/E6x3mtcakLOmPayEE0SdYL0kRNLE4Fg7kPPqNrES5objP6EnTx9g2y9f1vpgchzSkNbiLHcMEtOYiW9GUybwmLdUopqPJ484Fm4wm8vFQcmSIi1e1l4U1Qoojukja3mKGW77tTGQKyPKsHrFahOAXZ09vGNxLM2wJyE0Lx/m9TPjQoVV989B4mCL5mmhkIL86vNU+ldewTfruBHt1g6hDfK/EbSdjKTj55OamQdtLcyk96kwBvvzPnHTnQ4a4A1OyhxdSbEwb5bH36uJD1KcbMx92LcbMyjHCcNFWzugpydynHaH0/1cp7uBTmaV+J+kOTsTJNTixQHUS5NRDnbpJFuSvco0FkJaebQ5DTm9nhpJtXZpsSdWNb89CjXWS75evXmo3Rnhblm0O7CVLqTuAx+d+0uzQU3jJX8IN6luXin5qsM6p37xmws13f9LszVOytGMMh3aSrfqWM3g37nZgKegltl81xZvm3x3kW8ZsZ7GU+Rlcog5MWpjLcdCgxCXp4LeXi8Dkpemit5Ojlzg5SXu5QnN+RBy3Mno1JUUJy6mjc85doBXJfz/EzPY88t/c72qEwEPRJmVYf0B4qe1ZtzuQD0o6Q3GzVoelbE1g2iXn6jS8T776l6yiEfBtKeHmU92YqFdF1vIuspf0LsWd0S/U7Zs6oFdpD24lzZAyAgTD0U8kzak2DkB21vKu01dXzQ9tJRB75ROVRTdDLcO2mF+aO+p7gyXeDTZh81E7ZB5TkdXacKn2xi4yAi5YnEJ+Oy/wscPup8GlXzwMXzo9AnVwKXp9IXpjpfA9Y6VDs3U/o0SkLb+b70H0p9agrLReuz6skGkSDNxD5VstjVvjrX+qTlnZ3zXrsfBT9hZR4UvzQT/HTFDVKdm0p+k1GPot9k0L3s1+C7635hqvppd3mQ/dJM9lO5cIPu5+bCnzh0GpS/NA3iP04HksaLoPl78rZTSVy2Ur0S5Tzupw00q6ty4lKrREpCB8+bVc9DOzVqnPTlEVAdRHkiFFdmjEb3qmugNdBcIfK9JID3tD7qSb0/T3WIe2qrdC/2k49I860O2AIqQ7+pVH2RoZeImFci/HK8st1612ou+ZVPX78ASAQ8eOaP2kFLDNfqTej9I7yAgMk0zWln8o3ZACLV6yBvY21YCDZSh3qjQbj9SL5mnOzB8lSba2or9jTeZF8129JdM3Rs7fhOyVNjW1IVUinHKm3TKf2gfzYqB81JhxFuGuPVlx1MPbd+DlaSIVbxIIWzUXAtkm9vhsCNjeFnqSV+aPp3gp+t1Nuh4dxxPRXhTwe8xtzVYI66IDFF1xdGu1Fs4+Wsx+rrA3qbE5Oq8pFcvDs7ake5Yx0RRICkacjs2SAJKbVrRdOZ5IM8CIWzNanCg3ddmsiz7ZE2GVgb25eJpaAvBZjsHYWfGPpMgQfXnNSqAFIA8NnypeFsVZ+e2FOuCi1XSwwDot4sTaxOtMbYB3NUQk/NDoq85nwFL1VSEJCKu7fhL1oJzL+3AqV9UuLIIntsR91Bzr0VCDp5ZwEQ93BEtt86BiWMOxiObAPM2NJ8UChKZ/u/2cZ3rSrUx0E8ruOZMpx5T2dSOYtdstqWkim6rh5gBhC0b8jYV4n+PHjVF1c8eMIOPsfB5a5DMCJyl5aVyCBysGLZjLR9UxHuKuhsFOTfhfkE6if8KFhoMdGcgBxq3gR1lnIeBGhbhteekLPRFaPK3jU8xSjodoJcabyHhBB93kuHIMOt1MiuoKk1qP1gxmaWaEu3FgNwfSRDOiPAZeUQZBqdA2uH05+Z3+8HtbCBG4brudzDTNJ14+VYCxylig2kouhwrGNIIwwhDedeRLK9Ns1NWgAvTOzfuGwJG4tYYYN/UuBZBxB5+KLhLpW2MxKKRv885eUxJ2epHNXTjaKcMCGq9RwlbEVLvFhNqVtGHemA/HmJoHZUCRbfUJScJBAzSEr5nRoz0q4roTf496oe5/zQhfbOXVoy6pUORsN5TrR1ikTdgH43JwKKtfsh4PHdiDLG1IEZ9Y9NpMvSBY3V9nhKrWsxOiDaFrKdM0BGLtKTE5gkuviDPTaslbwx9NhO3SiT0ZVvGoptYCsBsTfsmksMwfZ9uu1sIF++/pgMsptydw7avj5hby753nNifKlLNGp7Mbo9DmlQRTzi67OyOvVhNQ8Vqy2r4pAOe8wF2fRjF9TOgMgaV06XuE0t7sJOnoxiKqVcHnuz2VxEBbeHYxydH9ixeqQWXEHQdsoAbe2llPO4whlCO8bOy7ajAeOpYWdq5ttjLDddwObLscx0VPtkbqNazksoNN2U6ULiaV5oCamSG384nlEXSjuJi7dKRCSKxtfeTerDIX3LmK9fZN2PWnDpyoZ7O6moplHEv8cBj/NQYKhcpwHPXl/aUC5TqvvJ9mRQkATN9boXr9lEbI/evGPpbDntgG84FDTzvYEwVRM82qbduTmth7Q+S1g+nwnANdFdepWavbMd2dYeFrPlz8Y8mGEyaGLQx0Xd+2WyoZmD/4NgIaaSB0XyeYSxM34XKekk+nEG5Xf4xzYARe2nSu2LMhB6OPhmhTpzr/24DL4PsI6njU5H7vDAU8+zreCGNH7KxE6zbHHP98mqztKnY6Qo+rPgzoZIGyNH71akU6ZTz9vPIesgl/m2tViHqrSdXguZB7msmYmm0p6H/CL7FM2+O7/Z2FNU6DCa83vD27xCyT57H98rVdJJVu0OO5+BlwGWlz6At1LUhpNNgDDH9imTPSNO6wflx29RXFbzFc8PYHZ1PsbLMTd9kHSyrsnuVYNSdIgjsyGCQX/91nE2Sick46htrlAyRGknQW2UdnvKZKFsk/lLL69ul5Qb4VnNBOzjOFcs2ycd2G83wQtb0CfhZ1f3rnXfdejzXuB16sd7f0Nx4BI76Jd8qyG0N0MzKBeKi/davsnPkZg+9XEcjZ1SuJxBOX0TlS9pnnQqOKS5n4xiLsnFqctW06kiGVCkK21G2ZxOXzGICQQtwWLdyKalS+q4cPgwO4o82/GTZXYjcW1nV4RhbCdgI5CLg6gTq+e34ZMxSWOGqHjXnJvHz2emc5Mj9CfDwbLWCBp0Wue3ZgeSBTE3434lPY28Qa287XRDdgOvdYaxNdVx0y7c0BBtLnApDN+MpbX1xr2HbFnPPobj4fsxTBMB5jR9Oq9Ki/ODiCZpkiw9Exp4QHkGG7MZzDh+xQGyEtXpFJVbdyLBoDcRL0ofHbMMM4MYnijoJAx6X0tHQOGOTuCT3Wpd1emI94XmJbs9UphFMnTqy1F1gXyNXyAqxZzSHzBqu2hfMtqrUtSMYcr918TLvNzN/v+o7/V/t/31T/8Pj1CMQgY3AAA=\nARCHIE_LOGO\nbase64 -d < $D/logo.svg.gz.b64 | gunzip > $D/logo.svg\n\ncat > $D/index.html <<'ARCHIE_PAGE'\n<!doctype html><meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">\n<title>Provisioned by Archie</title>\n<style>\n/* ONE GROUND, DELIBERATELY. The kit ships a dark and a light lockup and both\n   compressed would take 12.9KB of a 16KB user_data budget, leaving no room for\n   the page. So this commits to the primary mark on brand navy \u2014 which the\n   README calls the primary mark \u2014 and paints every colour explicitly rather\n   than inheriting one. */\n:root{--ink:#f4f2fa;--paper:#070F26;--muted:#9b98b4;--line:#201c33;\n      --violet:#7860FF}\n*{box-sizing:border-box}\nbody{margin:0;min-height:100vh;display:grid;place-items:center;background:var(--paper);\n     color:var(--ink);font:16px/1.65 ui-sans-serif,system-ui,-apple-system,sans-serif;\n     padding:2rem}\n.card{max-width:38rem}\n.lockup{display:block;margin:0 0 2.4rem;height:46px;width:auto}\nh1{font-size:1.9rem;line-height:1.22;letter-spacing:-.022em;margin:0 0 1.1rem;\n    text-wrap:balance}\np{color:var(--muted);margin:0 0 1.1rem}\np:last-of-type{margin-bottom:2rem}\ndl{display:grid;grid-template-columns:auto 1fr;gap:.5rem 1.6rem;margin:0;\n    padding-top:1.6rem;border-top:1px solid var(--line);\n    font:12.5px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace}\ndt{color:var(--muted)} dd{margin:0}\n.ok{display:inline-block;width:.5rem;height:.5rem;border-radius:50%;background:#2fbf71;\n     margin-right:.55rem;vertical-align:middle}\n</style>\n<div class=\"card\">\n<img class=\"lockup\" src=\"/logo.svg\" alt=\"askarchie\" width=\"176\" height=\"62\">\n<h1><span class=\"ok\"></span>Served through infrastructure Archie composed.</h1>\n<p>This page is served through a customer-managed key, a private network, an instance and an internet-facing load balancer &mdash; ordered, wired and governed from a single request.</p>\n<p>Nobody asked for the listener, the target group and the security rules that let traffic reach it. Archie worked out they were missing and filled them in, because a load balancer with no listener answers on no port at all.</p>\n<p>The page itself is not Archie&rsquo;s. It came from the startup script the deployer supplied. The platform builds the infrastructure; you bring the application.</p>\n<dl><dt>instance</dt><dd>$I</dd><dt>zone</dt><dd>$Z</dd><dt>served by</dt><dd>python3 http.server</dd></dl>\n</div>\nARCHIE_PAGE\nsed -i \"s|\\$I|$I|g; s|\\$Z|$Z|g\" $D/index.html\n\ncat > /etc/systemd/system/archie-demo.service <<'UNIT'\n[Unit]\nDescription=Archie demo page\nAfter=network.target\n[Service]\nExecStart=/usr/bin/python3 -m http.server 80 --directory /opt/demo\nRestart=always\n[Install]\nWantedBy=multi-user.target\nUNIT\nsystemctl daemon-reload\nsystemctl enable archie-demo.service\nsystemctl start archie-demo.service || \\\n  (setsid nohup /usr/bin/python3 -m http.server 80 --directory $D >/dev/null 2>&1 &)\n"
+      },
+      "id": "alb",
+      "state_key_hint": "tf-native-state/<tenant>/<app>-alb-<env>/terraform.tfstate",
+      "version": "1.0.0"
+    },
+    {
+      "blueprint_id": "bp-91818d988662",
+      "blueprint_name": "Container Registry",
+      "config": {},
+      "id": "ecs",
+      "state_key_hint": "tf-native-state/<tenant>/<app>-ecs-<env>/terraform.tfstate",
+      "version": "1.0.0"
+    },
+    {
+      "blueprint_id": "bp-7d8dab2da719",
+      "blueprint_name": "KMS Key",
+      "config": {
+        "key_statements": [
+          {
+            "actions": [
+              "kms:Encrypt",
+              "kms:Decrypt",
+              "kms:ReEncrypt*",
+              "kms:GenerateDataKey*",
+              "kms:DescribeKey"
+            ],
+            "principals": [
+              {
+                "identifiers": [
+                  "ec2.amazonaws.com",
+                  "eks.amazonaws.com",
+                  "elasticache.amazonaws.com",
+                  "logs.us-east-1.amazonaws.com",
+                  "rds.amazonaws.com",
+                  "redshift.amazonaws.com",
+                  "sqs.amazonaws.com"
+                ],
+                "type": "Service"
+              }
+            ],
+            "resources": [
+              "*"
+            ],
+            "sid": "ArchieAllowServiceUse"
+          },
+          {
+            "actions": [
+              "kms:CreateGrant",
+              "kms:ListGrants",
+              "kms:RevokeGrant"
+            ],
+            "condition": [
+              {
+                "test": "Bool",
+                "values": [
+                  "true"
+                ],
+                "variable": "kms:GrantIsForAWSResource"
+              }
+            ],
+            "principals": [
+              {
+                "identifiers": [
+                  "eks.amazonaws.com",
+                  "elasticache.amazonaws.com",
+                  "logs.us-east-1.amazonaws.com",
+                  "rds.amazonaws.com",
+                  "redshift.amazonaws.com"
+                ],
+                "type": "Service"
+              }
+            ],
+            "resources": [
+              "*"
+            ],
+            "sid": "ArchieAllowServiceGrants"
+          }
+        ]
+      },
+      "id": "kms",
+      "state_key_hint": "tf-native-state/<tenant>/<app>-kms-<env>/terraform.tfstate",
+      "version": "1.0.0"
+    },
+    {
+      "blueprint_id": "bp-de0365afea15",
+      "blueprint_name": "VPC",
+      "config": {
+        "create_vpc": true
+      },
+      "id": "vpc",
+      "state_key_hint": "tf-native-state/<tenant>/<app>-vpc-<env>/terraform.tfstate",
+      "version": "1.0.0"
+    },
+    {
+      "blueprint_id": "bp-5cd8b52e1aac",
+      "blueprint_name": "DB Instance",
+      "config": {
+        "allocated_storage": "20",
+        "create_db_instance": true,
+        "engine": "postgres",
+        "family": "postgres16",
+        "major_engine_version": "16",
+        "storage_encrypted": true,
+        "username": "postgres"
+      },
+      "id": "rds",
+      "state_key_hint": "tf-native-state/<tenant>/<app>-rds-<env>/terraform.tfstate",
+      "version": "1.0.0"
+    }
+  ],
+  "config": {},
+  "deploy_order": [
+    "alb",
+    "ecs",
+    "kms",
+    "vpc",
+    "rds"
+  ],
+  "exported_by": "archie",
+  "note": "Archie is the source of truth for this path. This directory is a projection of it, so that the infrastructure remains yours and runnable if Archie goes away. Editing these files does not change the path.",
+  "open_fields": [
+    {
+      "component": "alb",
+      "input": "project",
+      "type": "text"
+    },
+    {
+      "component": "alb",
+      "input": "environment",
+      "type": "text"
+    },
+    {
+      "component": "alb",
+      "input": "namespace",
+      "type": "text"
+    },
+    {
+      "component": "ecs",
+      "input": "repository_name",
+      "type": "text"
+    },
+    {
+      "component": "vpc",
+      "input": "name",
+      "type": "text"
+    },
+    {
+      "component": "rds",
+      "input": "identifier",
+      "type": "text"
+    },
+    {
+      "component": "alb",
+      "input": "labels",
+      "type": "map"
+    },
+    {
+      "component": "ecs",
+      "input": "tags",
+      "type": "map"
+    }
+  ],
+  "wiring": [
+    {
+      "component": "ecs",
+      "inputs": [
+        {
+          "from": null,
+          "how": "governed",
+          "input": "tags",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "map(string)",
+          "type": "map",
+          "value": {
+            "ManagedBy": "Archie"
+          }
+        },
+        {
+          "from": null,
+          "how": "unsatisfied",
+          "input": "repository_name",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "string",
+          "type": "text",
+          "value": null
+        }
+      ]
+    },
+    {
+      "component": "kms",
+      "inputs": [
+        {
+          "from": null,
+          "how": "governed",
+          "input": "tags",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "map(string)",
+          "type": "map",
+          "value": {
+            "ManagedBy": "Archie"
+          }
+        }
+      ]
+    },
+    {
+      "component": "vpc",
+      "inputs": [
+        {
+          "from": null,
+          "how": "unsatisfied",
+          "input": "name",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "string",
+          "type": "text",
+          "value": null
+        },
+        {
+          "from": null,
+          "how": "supplied",
+          "input": "azs",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "list(string)",
+          "type": "list",
+          "value": [
+            "us-east-1a",
+            "us-east-1b"
+          ]
+        },
+        {
+          "from": null,
+          "how": "governed",
+          "input": "tags",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "map(string)",
+          "type": "map",
+          "value": {
+            "ManagedBy": "Archie"
+          }
+        },
+        {
+          "from": "kms.key_arn",
+          "how": "inferred",
+          "input": "flow_log_cloudwatch_log_group_kms_key_id",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "string",
+          "type": "text",
+          "value": null
+        }
+      ]
+    },
+    {
+      "component": "rds",
+      "inputs": [
+        {
+          "from": null,
+          "how": "unsatisfied",
+          "input": "identifier",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "string",
+          "type": "text",
+          "value": null
+        },
+        {
+          "from": "vpc.private_subnets",
+          "how": "inferred",
+          "input": "subnet_ids",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "list(string)",
+          "type": "list",
+          "value": null
+        },
+        {
+          "from": null,
+          "how": "governed",
+          "input": "tags",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "map(string)",
+          "type": "map",
+          "value": {
+            "ManagedBy": "Archie"
+          }
+        },
+        {
+          "from": "kms.key_arn",
+          "how": "inferred",
+          "input": "master_user_secret_kms_key_id",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "string",
+          "type": "text",
+          "value": null
+        },
+        {
+          "from": "kms.key_arn",
+          "how": "inferred",
+          "input": "cloudwatch_log_group_kms_key_id",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "string",
+          "type": "text",
+          "value": null
+        },
+        {
+          "from": null,
+          "how": "unsatisfied",
+          "input": "vpc_security_group_ids",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "list(string)",
+          "type": "list",
+          "value": null
+        },
+        {
+          "from": "kms.key_arn",
+          "how": "inferred",
+          "input": "kms_key_id",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "string",
+          "type": "text",
+          "value": null
+        },
+        {
+          "from": "kms.key_arn",
+          "how": "inferred",
+          "input": "performance_insights_kms_key_id",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "string",
+          "type": "text",
+          "value": null
+        }
+      ]
+    },
+    {
+      "component": "eks",
+      "inputs": [
+        {
+          "from": null,
+          "how": "governed",
+          "input": "tags",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "map(string)",
+          "type": "map",
+          "value": {
+            "ManagedBy": "Archie"
+          }
+        },
+        {
+          "from": "vpc.private_subnets",
+          "how": "inferred",
+          "input": "control_plane_subnet_ids",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "list(string)",
+          "type": "list",
+          "value": null
+        },
+        {
+          "from": "vpc.private_subnets",
+          "how": "inferred",
+          "input": "subnet_ids",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "list(string)",
+          "type": "list",
+          "value": null
+        },
+        {
+          "from": null,
+          "how": "unsatisfied",
+          "input": "name",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "string",
+          "type": "text",
+          "value": null
+        },
+        {
+          "from": null,
+          "how": "unsatisfied",
+          "input": "endpoint_public_access_cidrs",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "list(string)",
+          "type": "list",
+          "value": null
+        },
+        {
+          "from": "kms.key_arn",
+          "how": "inferred",
+          "input": "cloudwatch_log_group_kms_key_id",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "string",
+          "type": "text",
+          "value": null
+        },
+        {
+          "from": "vpc.vpc_id",
+          "how": "exact",
+          "input": "vpc_id",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "string",
+          "type": "text",
+          "value": null
+        },
+        {
+          "from": null,
+          "how": "governed",
+          "input": "create_security_group",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "bool",
+          "type": "boolean",
+          "value": true
+        },
+        {
+          "from": "vpc.database_subnets_cidr_blocks",
+          "how": "inferred",
+          "input": "security_group_additional_rules",
+          "key_sources": {
+            "cidr_blocks": "database_subnets_cidr_blocks",
+            "ipv6_cidr_blocks": "database_subnets_ipv6_cidr_blocks"
+          },
+          "key_values": {},
+          "tf_type": "map(object({\n    protocol                   = optional(string, \"tcp\")\n    from_port                  = number\n    to_port                    = number\n    type                       = optional(string, \"ingress\")\n    description                = optional(string)\n    cidr_blocks                = optional(list(string))\n    ipv6_cidr_blocks           = optional(list(string))\n    prefix_list_ids            = optional(list(string))\n    self                       = optional(bool)\n    source_node_security_group = optional(bool, false)\n    source_security_group_id   = optional(string)\n  }))",
+          "type": "map",
+          "value": null
+        },
+        {
+          "from": "vpc.database_subnets_cidr_blocks",
+          "how": "inferred",
+          "input": "node_security_group_additional_rules",
+          "key_sources": {
+            "cidr_blocks": "database_subnets_cidr_blocks",
+            "ipv6_cidr_blocks": "database_subnets_ipv6_cidr_blocks"
+          },
+          "key_values": {},
+          "tf_type": "map(object({\n    protocol                      = optional(string, \"tcp\")\n    from_port                     = number\n    to_port                       = number\n    type                          = optional(string, \"ingress\")\n    description                   = optional(string)\n    cidr_blocks                   = optional(list(string))\n    ipv6_cidr_blocks              = optional(list(string))\n    prefix_list_ids               = optional(list(string))\n    self                          = optional(bool)\n    source_cluster_security_group = optional(bool, false)\n    source_security_group_id      = optional(string)\n  }))",
+          "type": "map",
+          "value": null
+        },
+        {
+          "from": "rds.enhanced_monitoring_iam_role_arn",
+          "how": "inferred",
+          "input": "self_managed_node_groups",
+          "key_sources": {
+            "iam_role_arn": "enhanced_monitoring_iam_role_arn",
+            "iam_role_name": "db_instance_domain_iam_role_name"
+          },
+          "key_values": {},
+          "tf_type": "map(object({\n    create             = optional(bool)\n    kubernetes_version = optional(string)\n\n    # Autoscaling Group\n    create_autoscaling_group         = optional(bool)\n    name                             = optional(string) # Will fall back to map key\n    use_name_prefix                  = optional(bool)\n    availability_zones               = optional(list(string))\n    subnet_ids                       = optional(list(string))\n    min_size                         = optional(number)\n    max_size                         = optional(number)\n    desired_size                     = optional(number)\n    desired_size_type                = optional(string)\n    capacity_rebalance               = optional(bool)\n    default_instance_warmup          = optional(number)\n    protect_from_scale_in            = optional(bool)\n    context                          = optional(string)\n    create_placement_group           = optional(bool)\n    placement_group                  = optional(string)\n    health_check_type                = optional(string)\n    health_check_grace_period        = optional(number)\n    ignore_failed_scaling_activities = optional(bool)\n    force_delete                     = optional(bool)\n    termination_policies             = optional(list(string))\n    suspended_processes              = optional(list(string))\n    max_instance_lifetime            = optional(number)\n    enabled_metrics                  = optional(list(string))\n    metrics_granularity              = optional(string)\n    initial_lifecycle_hooks = optional(list(object({\n      default_result          = optional(string)\n      heartbeat_timeout       = optional(number)\n      lifecycle_transition    = string\n      name                    = string\n      notification_metadata   = optional(string)\n      notification_target_arn = optional(string)\n      role_arn                = optional(string)\n    })))\n    instance_maintenance_policy = optional(object({\n      max_healthy_percentage = number\n      min_healthy_percentage = number\n    }))\n    instance_refresh = optional(object({\n      preferences = optional(object({\n        alarm_specification = optional(object({\n          alarms = optional(list(string))\n        }))\n        auto_rollback                = optional(bool)\n        checkpoint_delay             = optional(number)\n        checkpoint_percentages       = optional(list(number))\n        instance_warmup              = optional(number)\n        max_healthy_percentage       = optional(number)\n        min_healthy_percentage       = optional(number)\n        scale_in_protected_instances = optional(string)\n        skip_matching                = optional(bool)\n        standby_instances            = optional(string)\n      }))\n      strategy = optional(string)\n      triggers = optional(list(string))\n      })\n    )\n    use_mixed_instances_policy = optional(bool)\n    mixed_instances_policy = optional(object({\n      instances_distribution = optional(object({\n        on_demand_allocation_strategy            = optional(string)\n        on_demand_base_capacity                  = optional(number)\n        on_demand_percentage_above_base_capacity = optional(number)\n        spot_allocation_strategy                 = optional(string)\n        spot_instance_pools                      = optional(number)\n        spot_max_price                           = optional(string)\n      }))\n      launch_template = object({\n        override = optional(list(object({\n          instance_requirements = optional(object({\n            accelerator_count = optional(object({\n              max = optional(number)\n              min = optional(number)\n            }))\n            accelerator_manufacturers = optional(list(string))\n            accelerator_names         = optional(list(string))\n            accelerator_total_memory_mib = optional(object({\n              max = optional(number)\n              min = optional(number)\n            }))\n            accelerator_types      = optional(list(string))\n            allowed_instance_types = optional(list(string))\n            bare_metal             = optional(string)\n            baseline_ebs_bandwidth_mbps = optional(object({\n              max = optional(number)\n              min = optional(number)\n            }))\n            burstable_performance                                   = optional(string)\n            cpu_manufacturers                                       = optional(list(string))\n            excluded_instance_types                                 = optional(list(string))\n            instance_generations                                    = optional(list(string))\n            local_storage                                           = optional(string)\n            local_storage_types                                     = optional(list(string))\n            max_spot_price_as_percentage_of_optimal_on_demand_price = optional(number)\n            memory_gib_per_vcpu = optional(object({\n              max = optional(number)\n              min = optional(number)\n            }))\n            memory_mib = optional(object({\n              max = optional(number)\n              min = optional(number)\n            }))\n            network_bandwidth_gbps = optional(object({\n              max = optional(number)\n              min = optional(number)\n            }))\n            network_interface_count = optional(object({\n              max = optional(number)\n              min = optional(number)\n            }))\n            on_demand_max_price_percentage_over_lowest_price = optional(number)\n            require_hibernate_support                        = optional(bool)\n            spot_max_price_percentage_over_lowest_price      = optional(number)\n            total_local_storage_gb = optional(object({\n              max = optional(number)\n              min = optional(number)\n            }))\n            vcpu_count = optional(object({\n              max = optional(number)\n              min = optional(number)\n            }))\n          }))\n          instance_type = optional(string)\n          launch_template_specification = optional(object({\n            launch_template_id   = optional(string)\n            launch_template_name = optional(string)\n            version              = optional(string)\n          }))\n          weighted_capacity = optional(string)\n        })))\n      })\n    }))\n    timeouts = optional(object({\n      delete = optional(string)\n    }))\n    autoscaling_group_tags = optional(map(string))\n    # User data\n    ami_type                   = optional(string)\n    additional_cluster_dns_ips = optional(list(string))\n    pre_bootstrap_user_data    = optional(string)\n    post_bootstrap_user_data   = optional(string)\n    bootstrap_extra_args       = optional(string)\n    user_data_template_path    = optional(string)\n    cloudinit_pre_nodeadm = optional(list(object({\n      content      = string\n      content_type = optional(string)\n      filename     = optional(string)\n      merge_type   = optional(string)\n    })))\n    cloudinit_post_nodeadm = optional(list(object({\n      content      = string\n      content_type = optional(string)\n      filename     = optional(string)\n      merge_type   = optional(string)\n    })))\n    # Launch Template\n    create_launch_template                 = optional(bool)\n    use_custom_launch_template             = optional(bool)\n    launch_template_id                     = optional(string)\n    launch_template_name                   = optional(string) # Will fall back to map key\n    launch_template_use_name_prefix        = optional(bool)\n    launch_template_version                = optional(string)\n    launch_template_default_version        = optional(string)\n    update_launch_template_default_version = optional(bool)\n    launch_template_description            = optional(string)\n    launch_template_tags                   = optional(map(string))\n    tag_specifications                     = optional(list(string))\n    ebs_optimized                          = optional(bool)\n    ami_id                                 = optional(string)\n    instance_type                          = optional(string)\n    key_name                               = optional(string)\n    disable_api_termination                = optional(bool)\n    instance_initiated_shutdown_behavior   = optional(string)\n    kernel_id                              = optional(string)\n    ram_disk_id                            = optional(string)\n    block_device_mappings = optional(map(object({\n      device_name = optional(string)\n      ebs = optional(object({\n        delete_on_termination      = optional(bool)\n        encrypted                  = optional(bool)\n        iops                       = optional(number)\n        kms_key_id                 = optional(string)\n        snapshot_id                = optional(string)\n        throughput                 = optional(number)\n        volume_initialization_rate = optional(number)\n        volume_size                = optional(number)\n        volume_type                = optional(string)\n      }))\n      no_device    = optional(string)\n      virtual_name = optional(string)\n    })))\n    capacity_reservation_specification = optional(object({\n      capacity_reservation_preference = optional(string)\n      capacity_reservation_target = optional(object({\n        capacity_reservation_id                 = optional(string)\n        capacity_reservation_resource_group_arn = optional(string)\n      }))\n    }))\n    cpu_options = optional(object({\n      amd_sev_snp           = optional(string)\n      core_count            = optional(number)\n      nested_virtualization = optional(string)\n      threads_per_core      = optional(number)\n    }))\n    credit_specification = optional(object({\n      cpu_credits = optional(string)\n    }))\n    enclave_options = optional(object({\n      enabled = optional(bool)\n    }))\n    instance_requirements = optional(object({\n      accelerator_count = optional(object({\n        max = optional(number)\n        min = optional(number)\n      }))\n      accelerator_manufacturers = optional(list(string))\n      accelerator_names         = optional(list(string))\n      accelerator_total_memory_mib = optional(object({\n        max = optional(number)\n        min = optional(number)\n      }))\n      accelerator_types      = optional(list(string))\n      allowed_instance_types = optional(list(string))\n      bare_metal             = optional(string)\n      baseline_ebs_bandwidth_mbps = optional(object({\n        max = optional(number)\n        min = optional(number)\n      }))\n      burstable_performance                                   = optional(string)\n      cpu_manufacturers                                       = optional(list(string))\n      excluded_instance_types                                 = optional(list(string))\n      instance_generations                                    = optional(list(string))\n      local_storage                                           = optional(string)\n      local_storage_types                                     = optional(list(string))\n      max_spot_price_as_percentage_of_optimal_on_demand_price = optional(number)\n      memory_gib_per_vcpu = optional(object({\n        max = optional(number)\n        min = optional(number)\n      }))\n      memory_mib = optional(object({\n        max = optional(number)\n        min = optional(number)\n      }))\n      network_bandwidth_gbps = optional(object({\n        max = optional(number)\n        min = optional(number)\n      }))\n      network_interface_count = optional(object({\n        max = optional(number)\n        min = optional(number)\n      }))\n      on_demand_max_price_percentage_over_lowest_price = optional(number)\n      require_hibernate_support                        = optional(bool)\n      spot_max_price_percentage_over_lowest_price      = optional(number)\n      total_local_storage_gb = optional(object({\n        max = optional(number)\n        min = optional(number)\n      }))\n      vcpu_count = optional(object({\n        max = optional(number)\n        min = string\n      }))\n    }))\n    instance_market_options = optional(object({\n      market_type = optional(string)\n      spot_options = optional(object({\n        block_duration_minutes         = optional(number)\n        instance_interruption_behavior = optional(string)\n        max_price                      = optional(string)\n        spot_instance_type             = optional(string)\n        valid_until                    = optional(string)\n      }))\n    }))\n    license_specifications = optional(list(object({\n      license_configuration_arn = string\n    })))\n    metadata_options = optional(object({\n      http_endpoint               = optional(string)\n      http_protocol_ipv6          = optional(string)\n      http_put_response_hop_limit = optional(number)\n      http_tokens                 = optional(string)\n      instance_metadata_tags      = optional(string)\n    }))\n    enable_monitoring  = optional(bool)\n    enable_efa_support = optional(bool)\n    enable_efa_only    = optional(bool)\n    efa_indices        = optional(list(string))\n    network_interfaces = optional(list(object({\n      associate_carrier_ip_address = optional(bool)\n      associate_public_ip_address  = optional(bool)\n      connection_tracking_specification = optional(object({\n        tcp_established_timeout = optional(number)\n        udp_stream_timeout      = optional(number)\n        udp_timeout             = optional(number)\n      }))\n      delete_on_termination = optional(bool)\n      description           = optional(string)\n      device_index          = optional(number)\n      ena_srd_specification = optional(object({\n        ena_srd_enabled = optional(bool)\n        ena_srd_udp_specification = optional(object({\n          ena_srd_udp_enabled = optional(bool)\n        }))\n      }))\n      interface_type       = optional(string)\n      ipv4_address_count   = optional(number)\n      ipv4_addresses       = optional(list(string))\n      ipv4_prefix_count    = optional(number)\n      ipv4_prefixes        = optional(list(string))\n      ipv6_address_count   = optional(number)\n      ipv6_addresses       = optional(list(string))\n      ipv6_prefix_count    = optional(number)\n      ipv6_prefixes        = optional(list(string))\n      network_card_index   = optional(number)\n      network_interface_id = optional(string)\n      primary_ipv6         = optional(bool)\n      private_ip_address   = optional(string)\n      security_groups      = optional(list(string))\n      subnet_id            = optional(string)\n    })))\n    network_performance_options = optional(object({\n      bandwidth_weighting = optional(string)\n    }))\n    placement = optional(object({\n      affinity                = optional(string)\n      availability_zone       = optional(string)\n      group_name              = optional(string)\n      host_id                 = optional(string)\n      host_resource_group_arn = optional(string)\n      partition_number        = optional(number)\n      spread_domain           = optional(string)\n      tenancy                 = optional(string)\n    }))\n    maintenance_options = optional(object({\n      auto_recovery = optional(string)\n    }))\n    private_dns_name_options = optional(object({\n      enable_resource_name_dns_aaaa_record = optional(bool)\n      enable_resource_name_dns_a_record    = optional(bool)\n      hostname_type                        = optional(string)\n    }))\n    # IAM role\n    create_iam_instance_profile   = optional(bool)\n    iam_instance_profile_arn      = optional(string)\n    iam_role_name                 = optional(string)\n    iam_role_use_name_prefix      = optional(bool)\n    iam_role_path                 = optional(string)\n    iam_role_description          = optional(string)\n    iam_role_permissions_boundary = optional(string)\n    iam_role_tags                 = optional(map(string))\n    iam_role_attach_cni_policy    = optional(bool)\n    iam_role_additional_policies  = optional(map(string))\n    create_iam_role_policy        = optional(bool)\n    iam_role_policy_statements = optional(list(object({\n      sid           = optional(string)\n      actions       = optional(list(string))\n      not_actions   = optional(list(string))\n      effect        = optional(string)\n      resources     = optional(list(string))\n      not_resources = optional(list(string))\n      principals = optional(list(object({\n        type        = string\n        identifiers = list(string)\n      })))\n      not_principals = optional(list(object({\n        type        = string\n        identifiers = list(string)\n      })))\n      condition = optional(list(object({\n        test     = string\n        values   = list(string)\n        variable = string\n      })))\n    })))\n    # Access entry\n    create_access_entry = optional(bool)\n    iam_role_arn        = optional(string)\n    # Security group\n    vpc_security_group_ids                = optional(list(string), [])\n    attach_cluster_primary_security_group = optional(bool, false)\n    create_security_group                 = optional(bool)\n    security_group_name                   = optional(string)\n    security_group_use_name_prefix        = optional(bool)\n    security_group_description            = optional(string)\n    security_group_ingress_rules = optional(map(object({\n      name                         = optional(string)\n      cidr_ipv4                    = optional(string)\n      cidr_ipv6                    = optional(string)\n      description                  = optional(string)\n      from_port                    = optional(string)\n      ip_protocol                  = optional(string)\n      prefix_list_id               = optional(string)\n      referenced_security_group_id = optional(string)\n      self                         = optional(bool)\n      tags                         = optional(map(string))\n      to_port                      = optional(string)\n    })))\n    security_group_egress_rules = optional(map(object({\n      name                         = optional(string)\n      cidr_ipv4                    = optional(string)\n      cidr_ipv6                    = optional(string)\n      description                  = optional(string)\n      from_port                    = optional(string)\n      ip_protocol                  = optional(string)\n      prefix_list_id               = optional(string)\n      referenced_security_group_id = optional(string)\n      self                         = optional(bool)\n      tags                         = optional(map(string))\n      to_port                      = optional(string)\n    })))\n    security_group_tags = optional(map(string))\n\n    tags = optional(map(string))\n  }))",
+          "type": "map",
+          "value": null
+        },
+        {
+          "from": "rds.enhanced_monitoring_iam_role_arn",
+          "how": "inferred",
+          "input": "eks_managed_node_groups",
+          "key_sources": {
+            "iam_role_arn": "enhanced_monitoring_iam_role_arn",
+            "iam_role_name": "db_instance_domain_iam_role_name"
+          },
+          "key_values": {},
+          "tf_type": "map(object({\n    create             = optional(bool)\n    kubernetes_version = optional(string)\n\n    # EKS Managed Node Group\n    name                           = optional(string) # Will fall back to map key\n    use_name_prefix                = optional(bool)\n    subnet_ids                     = optional(list(string))\n    min_size                       = optional(number)\n    max_size                       = optional(number)\n    desired_size                   = optional(number)\n    ami_id                         = optional(string)\n    ami_type                       = optional(string)\n    ami_release_version            = optional(string)\n    use_latest_ami_release_version = optional(bool)\n    capacity_type                  = optional(string)\n    disk_size                      = optional(number)\n    force_update_version           = optional(bool)\n    instance_types                 = optional(list(string))\n    labels                         = optional(map(string))\n    node_repair_config = optional(object({\n      enabled                                 = optional(bool)\n      max_parallel_nodes_repaired_count       = optional(number)\n      max_parallel_nodes_repaired_percentage  = optional(number)\n      max_unhealthy_node_threshold_count      = optional(number)\n      max_unhealthy_node_threshold_percentage = optional(number)\n      node_repair_config_overrides = optional(list(object({\n        min_repair_wait_time_mins = number\n        node_monitoring_condition = string\n        node_unhealthy_reason     = string\n        repair_action             = string\n      })))\n    }))\n    remote_access = optional(object({\n      ec2_ssh_key               = optional(string)\n      source_security_group_ids = optional(list(string))\n    }))\n    taints = optional(map(object({\n      key    = string\n      value  = optional(string)\n      effect = string\n    })))\n    update_config = optional(object({\n      max_unavailable            = optional(number)\n      max_unavailable_percentage = optional(number)\n      update_strategy            = optional(string)\n    }))\n    timeouts = optional(object({\n      create = optional(string)\n      update = optional(string)\n      delete = optional(string)\n    }))\n    # User data\n    enable_bootstrap_user_data = optional(bool)\n    pre_bootstrap_user_data    = optional(string)\n    post_bootstrap_user_data   = optional(string)\n    bootstrap_extra_args       = optional(string)\n    user_data_template_path    = optional(string)\n    cloudinit_pre_nodeadm = optional(list(object({\n      content      = string\n      content_type = optional(string)\n      filename     = optional(string)\n      merge_type   = optional(string)\n    })))\n    cloudinit_post_nodeadm = optional(list(object({\n      content      = string\n      content_type = optional(string)\n      filename     = optional(string)\n      merge_type   = optional(string)\n    })))\n    # Launch Template\n    create_launch_template                 = optional(bool)\n    use_custom_launch_template             = optional(bool)\n    launch_template_id                     = optional(string)\n    launch_template_name                   = optional(string) # Will fall back to map key\n    launch_template_use_name_prefix        = optional(bool)\n    launch_template_version                = optional(string)\n    launch_template_default_version        = optional(string)\n    update_launch_template_default_version = optional(bool)\n    launch_template_description            = optional(string)\n    launch_template_tags                   = optional(map(string))\n    tag_specifications                     = optional(list(string))\n    ebs_optimized                          = optional(bool)\n    key_name                               = optional(string)\n    disable_api_termination                = optional(bool)\n    kernel_id                              = optional(string)\n    ram_disk_id                            = optional(string)\n    block_device_mappings = optional(map(object({\n      device_name = optional(string)\n      ebs = optional(object({\n        delete_on_termination      = optional(bool)\n        encrypted                  = optional(bool)\n        iops                       = optional(number)\n        kms_key_id                 = optional(string)\n        snapshot_id                = optional(string)\n        throughput                 = optional(number)\n        volume_initialization_rate = optional(number)\n        volume_size                = optional(number)\n        volume_type                = optional(string)\n      }))\n      no_device    = optional(string)\n      virtual_name = optional(string)\n    })))\n    capacity_reservation_specification = optional(object({\n      capacity_reservation_preference = optional(string)\n      capacity_reservation_target = optional(object({\n        capacity_reservation_id                 = optional(string)\n        capacity_reservation_resource_group_arn = optional(string)\n      }))\n    }))\n    cpu_options = optional(object({\n      amd_sev_snp           = optional(string)\n      core_count            = optional(number)\n      nested_virtualization = optional(string)\n      threads_per_core      = optional(number)\n    }))\n    credit_specification = optional(object({\n      cpu_credits = optional(string)\n    }))\n    enclave_options = optional(object({\n      enabled = optional(bool)\n    }))\n    instance_market_options = optional(object({\n      market_type = optional(string)\n      spot_options = optional(object({\n        block_duration_minutes         = optional(number)\n        instance_interruption_behavior = optional(string)\n        max_price                      = optional(string)\n        spot_instance_type             = optional(string)\n        valid_until                    = optional(string)\n      }))\n    }))\n    license_specifications = optional(list(object({\n      license_configuration_arn = string\n    })))\n    metadata_options = optional(object({\n      http_endpoint               = optional(string)\n      http_protocol_ipv6          = optional(string)\n      http_put_response_hop_limit = optional(number)\n      http_tokens                 = optional(string)\n      instance_metadata_tags      = optional(string)\n    }))\n    enable_monitoring      = optional(bool)\n    enable_efa_support     = optional(bool)\n    enable_efa_only        = optional(bool)\n    efa_indices            = optional(list(string))\n    create_placement_group = optional(bool)\n    placement = optional(object({\n      affinity                = optional(string)\n      availability_zone       = optional(string)\n      group_name              = optional(string)\n      host_id                 = optional(string)\n      host_resource_group_arn = optional(string)\n      partition_number        = optional(number)\n      spread_domain           = optional(string)\n      tenancy                 = optional(string)\n    }))\n    network_interfaces = optional(list(object({\n      associate_carrier_ip_address = optional(bool)\n      associate_public_ip_address  = optional(bool)\n      connection_tracking_specification = optional(object({\n        tcp_established_timeout = optional(number)\n        udp_stream_timeout      = optional(number)\n        udp_timeout             = optional(number)\n      }))\n      delete_on_termination = optional(bool)\n      description           = optional(string)\n      device_index          = optional(number)\n      ena_srd_specification = optional(object({\n        ena_srd_enabled = optional(bool)\n        ena_srd_udp_specification = optional(object({\n          ena_srd_udp_enabled = optional(bool)\n        }))\n      }))\n      interface_type       = optional(string)\n      ipv4_address_count   = optional(number)\n      ipv4_addresses       = optional(list(string))\n      ipv4_prefix_count    = optional(number)\n      ipv4_prefixes        = optional(list(string))\n      ipv6_address_count   = optional(number)\n      ipv6_addresses       = optional(list(string))\n      ipv6_prefix_count    = optional(number)\n      ipv6_prefixes        = optional(list(string))\n      network_card_index   = optional(number)\n      network_interface_id = optional(string)\n      primary_ipv6         = optional(bool)\n      private_ip_address   = optional(string)\n      security_groups      = optional(list(string), [])\n      subnet_id            = optional(string)\n    })))\n    network_performance_options = optional(object({\n      bandwidth_weighting = optional(string)\n    }))\n    maintenance_options = optional(object({\n      auto_recovery = optional(string)\n    }))\n    private_dns_name_options = optional(object({\n      enable_resource_name_dns_aaaa_record = optional(bool)\n      enable_resource_name_dns_a_record    = optional(bool)\n      hostname_type                        = optional(string)\n    }))\n    # IAM role\n    create_iam_role               = optional(bool)\n    iam_role_arn                  = optional(string)\n    iam_role_name                 = optional(string)\n    iam_role_use_name_prefix      = optional(bool)\n    iam_role_path                 = optional(string)\n    iam_role_description          = optional(string)\n    iam_role_permissions_boundary = optional(string)\n    iam_role_tags                 = optional(map(string))\n    iam_role_attach_cni_policy    = optional(bool)\n    iam_role_additional_policies  = optional(map(string))\n    create_iam_role_policy        = optional(bool)\n    iam_role_policy_statements = optional(list(object({\n      sid           = optional(string)\n      actions       = optional(list(string))\n      not_actions   = optional(list(string))\n      effect        = optional(string)\n      resources     = optional(list(string))\n      not_resources = optional(list(string))\n      principals = optional(list(object({\n        type        = string\n        identifiers = list(string)\n      })))\n      not_principals = optional(list(object({\n        type        = string\n        identifiers = list(string)\n      })))\n      condition = optional(list(object({\n        test     = string\n        values   = list(string)\n        variable = string\n      })))\n    })))\n    # Security group\n    vpc_security_group_ids                = optional(list(string), [])\n    attach_cluster_primary_security_group = optional(bool, false)\n    cluster_primary_security_group_id     = optional(string)\n    create_security_group                 = optional(bool)\n    security_group_name                   = optional(string)\n    security_group_use_name_prefix        = optional(bool)\n    security_group_description            = optional(string)\n    security_group_ingress_rules = optional(map(object({\n      name                         = optional(string)\n      cidr_ipv4                    = optional(string)\n      cidr_ipv6                    = optional(string)\n      description                  = optional(string)\n      from_port                    = optional(string)\n      ip_protocol                  = optional(string)\n      prefix_list_id               = optional(string)\n      referenced_security_group_id = optional(string)\n      self                         = optional(bool)\n      tags                         = optional(map(string))\n      to_port                      = optional(string)\n    })))\n    security_group_egress_rules = optional(map(object({\n      name                         = optional(string)\n      cidr_ipv4                    = optional(string)\n      cidr_ipv6                    = optional(string)\n      description                  = optional(string)\n      from_port                    = optional(string)\n      ip_protocol                  = optional(string)\n      prefix_list_id               = optional(string)\n      referenced_security_group_id = optional(string)\n      self                         = optional(bool)\n      tags                         = optional(map(string))\n      to_port                      = optional(string)\n    })), {})\n    security_group_tags = optional(map(string))\n\n    tags = optional(map(string))\n  }))",
+          "type": "map",
+          "value": null
+        },
+        {
+          "from": "rds.enhanced_monitoring_iam_role_arn",
+          "how": "inferred",
+          "input": "fargate_profiles",
+          "key_sources": {
+            "iam_role_arn": "enhanced_monitoring_iam_role_arn",
+            "iam_role_name": "db_instance_domain_iam_role_name"
+          },
+          "key_values": {},
+          "tf_type": "map(object({\n    create = optional(bool)\n\n    # Fargate profile\n    name       = optional(string) # Will fall back to map key\n    subnet_ids = optional(list(string))\n    selectors = optional(list(object({\n      labels    = optional(map(string))\n      namespace = string\n    })))\n    timeouts = optional(object({\n      create = optional(string)\n      delete = optional(string)\n    }))\n\n    # IAM role\n    create_iam_role               = optional(bool)\n    iam_role_arn                  = optional(string)\n    iam_role_name                 = optional(string)\n    iam_role_use_name_prefix      = optional(bool)\n    iam_role_path                 = optional(string)\n    iam_role_description          = optional(string)\n    iam_role_permissions_boundary = optional(string)\n    iam_role_tags                 = optional(map(string))\n    iam_role_attach_cni_policy    = optional(bool)\n    iam_role_additional_policies  = optional(map(string))\n    create_iam_role_policy        = optional(bool)\n    iam_role_policy_statements = optional(list(object({\n      sid           = optional(string)\n      actions       = optional(list(string))\n      not_actions   = optional(list(string))\n      effect        = optional(string)\n      resources     = optional(list(string))\n      not_resources = optional(list(string))\n      principals = optional(list(object({\n        type        = string\n        identifiers = list(string)\n      })))\n      not_principals = optional(list(object({\n        type        = string\n        identifiers = list(string)\n      })))\n      condition = optional(list(object({\n        test     = string\n        values   = list(string)\n        variable = string\n      })))\n    })))\n    tags = optional(map(string))\n  }))",
+          "type": "map",
+          "value": null
+        }
+      ]
+    },
+    {
+      "component": "alb",
+      "inputs": [
+        {
+          "from": null,
+          "how": "unsatisfied",
+          "input": "project",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "string",
+          "type": "text",
+          "value": null
+        },
+        {
+          "from": null,
+          "how": "unsatisfied",
+          "input": "environment",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "string",
+          "type": "text",
+          "value": null
+        },
+        {
+          "from": null,
+          "how": "unsatisfied",
+          "input": "namespace",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "string",
+          "type": "text",
+          "value": null
+        },
+        {
+          "from": null,
+          "how": "governed",
+          "input": "labels",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "map(string)",
+          "type": "map",
+          "value": {
+            "ManagedBy": "Archie"
+          }
+        }
+      ]
+    }
+  ]
+}
