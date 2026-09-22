@@ -7,11 +7,11 @@ your bucket are keyed to. A tidier single root would match none of them.
 
 ## Running it without Archie
 
-1. `cd alb` — `tofu init -backend-config=...` then `tofu apply`
-2. `cd ecs` — `tofu init -backend-config=...` then `tofu apply`
-3. `cd kms` — `tofu init -backend-config=...` then `tofu apply`
-4. `cd vpc` — `tofu init -backend-config=...` then `tofu apply`
-5. `cd sg` — `tofu init -backend-config=...` then `tofu apply`
+1. `cd kms` — `tofu init -backend-config=...` then `tofu apply`
+2. `cd vpc` — `tofu init -backend-config=...` then `tofu apply`
+3. `cd ecs` — `tofu init -backend-config=...` then `tofu apply`
+4. `cd sg` — `tofu init -backend-config=...` then `tofu apply`
+5. `cd alb` — `tofu init -backend-config=...` then `tofu apply`
 6. `cd rds` — `tofu init -backend-config=...` then `tofu apply`
 
 Outputs feed the next component's inputs; `manifest.json` says which. Archie passes them between applies, so running these by hand means copying the values across yourself.
