@@ -1,6 +1,9 @@
 # A Bedrock AgentCore agent: a registry for its images, memory for its
 # conversations, and a runtime that runs the developer's container.
 #
+# Images and memory are encrypted with a key this path creates, which the org's
+# Encryption standard requires.
+#
 # Bring your own container. The runtime needs an image that already exists, so
 # `container_image` is the one thing a developer must answer. The registry is
 # built alongside and the runtime may pull from it, so after the first deploy a
@@ -20,11 +23,21 @@ provider "aws" {
   region = var.region
 }
 
+# One customer-managed key for everything this agent keeps at rest: its images
+# and its conversations.
+module "kms" {
+  source              = "terraform-aws-modules/kms/aws"
+  version             = "4.2.1"
+  description         = "${var.project} agent (${var.environment}) images and memory"
+  enable_key_rotation = true
+  tags                = var.tags
+}
+
 module "registry" {
   source      = "../../modules/aws/agent-registry"
   project     = var.project
   environment = var.environment
-  kms_key_arn = var.kms_key_arn
+  kms_key_arn = module.kms.key_arn
   tags        = var.tags
 }
 
@@ -33,7 +46,7 @@ module "memory" {
   project           = var.project
   environment       = var.environment
   event_expiry_days = var.memory_event_expiry_days
-  kms_key_arn       = var.kms_key_arn
+  kms_key_arn       = module.kms.key_arn
   tags              = var.tags
 }
 
@@ -83,12 +96,6 @@ variable "memory_event_expiry_days" {
   description = "How long conversation events are kept, in days (7-365)."
   type        = number
   default     = 30
-}
-
-variable "kms_key_arn" {
-  description = "Customer-managed key for images and memory at rest. Null uses AWS-managed encryption."
-  type        = string
-  default     = null
 }
 
 variable "tags" {
