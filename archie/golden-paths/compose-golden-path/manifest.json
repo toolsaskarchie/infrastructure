@@ -109,6 +109,14 @@
       "version": "1.0.0"
     },
     {
+      "blueprint_id": "bp-c448759c478d",
+      "blueprint_name": "Security Group",
+      "config": {},
+      "id": "sg",
+      "state_key_hint": "tf-native-state/<tenant>/<app>-sg-<env>/terraform.tfstate",
+      "version": "1.0.0"
+    },
+    {
       "blueprint_id": "bp-5cd8b52e1aac",
       "blueprint_name": "DB Instance",
       "config": {
@@ -131,6 +139,7 @@
     "ecs",
     "kms",
     "vpc",
+    "sg",
     "rds"
   ],
   "exported_by": "archie",
@@ -158,6 +167,11 @@
     },
     {
       "component": "vpc",
+      "input": "name",
+      "type": "text"
+    },
+    {
+      "component": "sg",
       "input": "name",
       "type": "text"
     },
