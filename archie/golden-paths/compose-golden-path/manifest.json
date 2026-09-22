@@ -10,25 +10,6 @@
   },
   "components": [
     {
-      "blueprint_id": "bp-fb6aa894a5f1",
-      "blueprint_name": "Kubernetes Workload",
-      "config": {
-        "ingress_enabled": true,
-        "user_data": "#cloud-boothook\n#!/bin/bash\n# Runs on EVERY boot (unlike user_data, which cloud-init runs once per instance).\n# Serves with preinstalled python3: this subnet has no NAT and no IGW, so any\n# package install would fail regardless of how the script got here.\nset -x\nexec >> /var/log/archie-demo.log 2>&1\nD=/opt/demo\nmkdir -p $D\nT=$(curl -s -X PUT --max-time 3 'http://169.254.169.254/latest/api/token' \\\n    -H 'X-aws-ec2-metadata-token-ttl-seconds: 60')\nI=$(curl -s --max-time 3 -H \"X-aws-ec2-metadata-token: $T\" \\\n    http://169.254.169.254/latest/meta-data/instance-id)\nZ=$(curl -s --max-time 3 -H \"X-aws-ec2-metadata-token: $T\" \\\n    http://169.254.169.254/latest/meta-data/placement/availability-zone)\n\ncat > $D/logo.svg.gz.b64 <<'ARCHIE_LOGO'\n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\nARCHIE_LOGO\nbase64 -d < $D/logo.svg.gz.b64 | gunzip > $D/logo.svg\n\ncat > $D/index.html <<'ARCHIE_PAGE'\n<!doctype html><meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">\n<title>Provisioned by Archie</title>\n<style>\n/* ONE GROUND, DELIBERATELY. The kit ships a dark and a light lockup and both\n   compressed would take 12.9KB of a 16KB user_data budget, leaving no room for\n   the page. So this commits to the primary mark on brand navy \u2014 which the\n   README calls the primary mark \u2014 and paints every colour explicitly rather\n   than inheriting one. */\n:root{--ink:#f4f2fa;--paper:#070F26;--muted:#9b98b4;--line:#201c33;\n      --violet:#7860FF}\n*{box-sizing:border-box}\nbody{margin:0;min-height:100vh;display:grid;place-items:center;background:var(--paper);\n     color:var(--ink);font:16px/1.65 ui-sans-serif,system-ui,-apple-system,sans-serif;\n     padding:2rem}\n.card{max-width:38rem}\n.lockup{display:block;margin:0 0 2.4rem;height:46px;width:auto}\nh1{font-size:1.9rem;line-height:1.22;letter-spacing:-.022em;margin:0 0 1.1rem;\n    text-wrap:balance}\np{color:var(--muted);margin:0 0 1.1rem}\np:last-of-type{margin-bottom:2rem}\ndl{display:grid;grid-template-columns:auto 1fr;gap:.5rem 1.6rem;margin:0;\n    padding-top:1.6rem;border-top:1px solid var(--line);\n    font:12.5px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace}\ndt{color:var(--muted)} dd{margin:0}\n.ok{display:inline-block;width:.5rem;height:.5rem;border-radius:50%;background:#2fbf71;\n     margin-right:.55rem;vertical-align:middle}\n</style>\n<div class=\"card\">\n<img class=\"lockup\" src=\"/logo.svg\" alt=\"askarchie\" width=\"176\" height=\"62\">\n<h1><span class=\"ok\"></span>Served through infrastructure Archie composed.</h1>\n<p>This page is served through a customer-managed key, a private network, an instance and an internet-facing load balancer &mdash; ordered, wired and governed from a single request.</p>\n<p>Nobody asked for the listener, the target group and the security rules that let traffic reach it. Archie worked out they were missing and filled them in, because a load balancer with no listener answers on no port at all.</p>\n<p>The page itself is not Archie&rsquo;s. It came from the startup script the deployer supplied. The platform builds the infrastructure; you bring the application.</p>\n<dl><dt>instance</dt><dd>$I</dd><dt>zone</dt><dd>$Z</dd><dt>served by</dt><dd>python3 http.server</dd></dl>\n</div>\nARCHIE_PAGE\nsed -i \"s|\\$I|$I|g; s|\\$Z|$Z|g\" $D/index.html\n\ncat > /etc/systemd/system/archie-demo.service <<'UNIT'\n[Unit]\nDescription=Archie demo page\nAfter=network.target\n[Service]\nExecStart=/usr/bin/python3 -m http.server 80 --directory /opt/demo\nRestart=always\n[Install]\nWantedBy=multi-user.target\nUNIT\nsystemctl daemon-reload\nsystemctl enable archie-demo.service\nsystemctl start archie-demo.service || \\\n  (setsid nohup /usr/bin/python3 -m http.server 80 --directory $D >/dev/null 2>&1 &)\n"
-      },
-      "id": "alb",
-      "state_key_hint": "tf-native-state/<tenant>/<app>-alb-<env>/terraform.tfstate",
-      "version": "1.0.0"
-    },
-    {
-      "blueprint_id": "bp-91818d988662",
-      "blueprint_name": "Container Registry",
-      "config": {},
-      "id": "ecs",
-      "state_key_hint": "tf-native-state/<tenant>/<app>-ecs-<env>/terraform.tfstate",
-      "version": "1.0.0"
-    },
-    {
       "blueprint_id": "bp-7d8dab2da719",
       "blueprint_name": "KMS Key",
       "config": {
@@ -109,11 +90,34 @@
       "version": "1.0.0"
     },
     {
+      "blueprint_id": "bp-e5a8346b5eee",
+      "blueprint_name": "ECS Fargate Service",
+      "config": {
+        "family": "fargate-task",
+        "name": "fargate-service"
+      },
+      "id": "ecs",
+      "state_key_hint": "tf-native-state/<tenant>/<app>-ecs-<env>/terraform.tfstate",
+      "version": "1.0.0"
+    },
+    {
       "blueprint_id": "bp-c448759c478d",
       "blueprint_name": "Security Group",
-      "config": {},
+      "config": {
+        "name": "rds-sg"
+      },
       "id": "sg",
       "state_key_hint": "tf-native-state/<tenant>/<app>-sg-<env>/terraform.tfstate",
+      "version": "1.0.0"
+    },
+    {
+      "blueprint_id": "bp-ce5dcbc94386",
+      "blueprint_name": "Application Load Balancer",
+      "config": {
+        "name": "app-alb"
+      },
+      "id": "alb",
+      "state_key_hint": "tf-native-state/<tenant>/<app>-alb-<env>/terraform.tfstate",
       "version": "1.0.0"
     },
     {
@@ -135,43 +139,18 @@
   ],
   "config": {},
   "deploy_order": [
-    "alb",
-    "ecs",
     "kms",
     "vpc",
+    "ecs",
     "sg",
+    "alb",
     "rds"
   ],
   "exported_by": "archie",
   "note": "Archie is the source of truth for this path. This directory is a projection of it, so that the infrastructure remains yours and runnable if Archie goes away. Editing these files does not change the path.",
   "open_fields": [
     {
-      "component": "alb",
-      "input": "project",
-      "type": "text"
-    },
-    {
-      "component": "alb",
-      "input": "environment",
-      "type": "text"
-    },
-    {
-      "component": "alb",
-      "input": "namespace",
-      "type": "text"
-    },
-    {
-      "component": "ecs",
-      "input": "repository_name",
-      "type": "text"
-    },
-    {
       "component": "vpc",
-      "input": "name",
-      "type": "text"
-    },
-    {
-      "component": "sg",
       "input": "name",
       "type": "text"
     },
@@ -181,12 +160,7 @@
       "type": "text"
     },
     {
-      "component": "alb",
-      "input": "labels",
-      "type": "map"
-    },
-    {
-      "component": "ecs",
+      "component": "kms",
       "input": "tags",
       "type": "map"
     }
