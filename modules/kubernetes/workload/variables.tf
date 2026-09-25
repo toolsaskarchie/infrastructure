@@ -16,8 +16,22 @@ variable "create_namespace" {
 }
 
 variable "image" {
-  description = "Fully-qualified container image, e.g. <account>.dkr.ecr.<region>.amazonaws.com/<repo>:<tag>. Must already be pushed."
+  description = "Container image. A bare repository URL (an ECR repository's `repository_url`) means its `:latest` tag."
   type        = string
+}
+
+variable "wait_for_rollout" {
+  description = <<-EOT
+    Wait for the pods to become ready before the apply finishes.
+
+    Off by default because the image is usually built AFTER the infrastructure
+    exists: the registry has to be there before anything can be pushed to it.
+    With this off the apply completes, Kubernetes keeps retrying the pull, and
+    the pods start as soon as the image arrives. Turn it on when the image is
+    already published and you want the apply to fail if the pods do not start.
+  EOT
+  type        = bool
+  default     = false
 }
 
 variable "container_port" {

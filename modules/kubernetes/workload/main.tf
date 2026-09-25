@@ -34,6 +34,11 @@ locals {
   wants_aws = length(var.iam_statements) > 0
   labels    = merge(var.labels, { "app.kubernetes.io/name" = var.name })
   oidc_host = replace(var.oidc_provider_arn, "/^arn:[^:]+:iam::[0-9]+:oidc-provider\\//", "")
+
+  # A repository URL with no tag or digest means its :latest image.
+  tagged       = can(regex("[:@][^/]*$", var.image))
+  image        = local.tagged ? var.image : "${var.image}:latest"
+  floating_tag = !local.tagged || endswith(var.image, ":latest")
 }
 
 resource "kubernetes_namespace_v1" "this" {
@@ -101,6 +106,8 @@ resource "kubernetes_service_account_v1" "this" {
 # ── the workload ─────────────────────────────────────────────────────────────
 
 resource "kubernetes_deployment_v1" "this" {
+  wait_for_rollout = var.wait_for_rollout
+
   metadata {
     name      = var.name
     namespace = local.namespace
@@ -128,7 +135,9 @@ resource "kubernetes_deployment_v1" "this" {
 
         container {
           name  = var.name
-          image = var.image
+          image = local.image
+          # A floating tag is re-pulled, so a restart runs the newest build.
+          image_pull_policy = local.floating_tag ? "Always" : "IfNotPresent"
 
           port {
             container_port = var.container_port
