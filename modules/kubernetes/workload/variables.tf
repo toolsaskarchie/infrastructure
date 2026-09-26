@@ -126,3 +126,32 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "config_files" {
+  description = "Files the app reads, as {filename = content}. Mounted read-only at config_mount_path from a ConfigMap, so data stays out of the image."
+  type        = map(string)
+  default     = {}
+}
+
+variable "config_map_name" {
+  description = "Name of the ConfigMap holding config_files. Empty = <name>-config. Set it when the app looks the ConfigMap up by name."
+  type        = string
+  default     = ""
+}
+
+variable "config_mount_path" {
+  description = "Directory the config_files appear in inside the container."
+  type        = string
+  default     = "/etc/config"
+}
+
+variable "api_access" {
+  description = "What the pods may ask the Kubernetes API for, in their own namespace: a list of RBAC rules. Empty = no API token is mounted at all."
+  type = list(object({
+    api_groups     = list(string)
+    resources      = list(string)
+    resource_names = optional(list(string))
+    verbs          = list(string)
+  }))
+  default = []
+}

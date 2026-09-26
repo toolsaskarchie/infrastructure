@@ -32,8 +32,12 @@ locals {
 
   # The pods get an AWS identity only when they were given something to do with it.
   wants_aws = length(var.iam_statements) > 0
-  labels    = merge(var.labels, { "app.kubernetes.io/name" = var.name })
-  oidc_host = replace(var.oidc_provider_arn, "/^arn:[^:]+:iam::[0-9]+:oidc-provider\\//", "")
+  # ...and a Kubernetes API identity only when they were granted something there.
+  wants_api   = length(var.api_access) > 0
+  config_name = var.config_map_name != "" ? var.config_map_name : "${var.name}-config"
+  has_config  = length(var.config_files) > 0
+  labels      = merge(var.labels, { "app.kubernetes.io/name" = var.name })
+  oidc_host   = replace(var.oidc_provider_arn, "/^arn:[^:]+:iam::[0-9]+:oidc-provider\\//", "")
 
   # A repository URL with no tag or digest means its :latest image.
   tagged       = can(regex("[:@][^/]*$", var.image))
@@ -100,7 +104,59 @@ resource "kubernetes_service_account_v1" "this" {
     labels      = local.labels
     annotations = local.wants_aws ? { "eks.amazonaws.com/role-arn" = aws_iam_role.pods[0].arn } : {}
   }
-  automount_service_account_token = local.wants_aws
+  automount_service_account_token = local.wants_aws || local.wants_api
+}
+
+# ── files and API access the app is given ───────────────────────────────────
+
+# Files the app READS, mounted read-only — data kept out of the image, changed
+# without a rebuild.
+resource "kubernetes_config_map_v1" "files" {
+  count = local.has_config ? 1 : 0
+  metadata {
+    name      = local.config_name
+    namespace = local.namespace
+    labels    = local.labels
+  }
+  data = var.config_files
+}
+
+# What the pods may ask the Kubernetes API for, in their own namespace only.
+resource "kubernetes_role_v1" "api" {
+  count = local.wants_api ? 1 : 0
+  metadata {
+    name      = var.name
+    namespace = local.namespace
+    labels    = local.labels
+  }
+  dynamic "rule" {
+    for_each = var.api_access
+    content {
+      api_groups     = rule.value.api_groups
+      resources      = rule.value.resources
+      resource_names = rule.value.resource_names
+      verbs          = rule.value.verbs
+    }
+  }
+}
+
+resource "kubernetes_role_binding_v1" "api" {
+  count = local.wants_api ? 1 : 0
+  metadata {
+    name      = var.name
+    namespace = local.namespace
+    labels    = local.labels
+  }
+  role_ref {
+    api_group = "rbac.authorization.k8s.io"
+    kind      = "Role"
+    name      = kubernetes_role_v1.api[0].metadata[0].name
+  }
+  subject {
+    kind      = "ServiceAccount"
+    name      = kubernetes_service_account_v1.this.metadata[0].name
+    namespace = local.namespace
+  }
 }
 
 # ── the workload ─────────────────────────────────────────────────────────────
@@ -143,6 +199,26 @@ resource "kubernetes_deployment_v1" "this" {
             container_port = var.container_port
           }
 
+          # Who and where this pod is — the downward API, free and always true.
+          env {
+            name = "POD_NAME"
+            value_from {
+              field_ref { field_path = "metadata.name" }
+            }
+          }
+          env {
+            name = "POD_NAMESPACE"
+            value_from {
+              field_ref { field_path = "metadata.namespace" }
+            }
+          }
+          env {
+            name = "NODE_NAME"
+            value_from {
+              field_ref { field_path = "spec.nodeName" }
+            }
+          }
+
           dynamic "env" {
             for_each = var.env
             content {
@@ -183,11 +259,30 @@ resource "kubernetes_deployment_v1" "this" {
             name       = "tmp"
             mount_path = "/tmp"
           }
+
+          dynamic "volume_mount" {
+            for_each = local.has_config ? [1] : []
+            content {
+              name       = "config"
+              mount_path = var.config_mount_path
+              read_only  = true
+            }
+          }
         }
 
         volume {
           name = "tmp"
           empty_dir {}
+        }
+
+        dynamic "volume" {
+          for_each = local.has_config ? [1] : []
+          content {
+            name = "config"
+            config_map {
+              name = kubernetes_config_map_v1.files[0].metadata[0].name
+            }
+          }
         }
       }
     }
