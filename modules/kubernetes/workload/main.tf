@@ -27,8 +27,9 @@ locals {
   # Never claim a namespace this workload did not make: destroying the workload
   # would take everything else in it down too.
   builtin_namespaces = ["default", "kube-system", "kube-public", "kube-node-lease"]
-  create_namespace   = var.create_namespace && !contains(local.builtin_namespaces, var.namespace)
-  namespace          = local.create_namespace ? kubernetes_namespace_v1.this[0].metadata[0].name : var.namespace
+  ns_name            = var.namespace != "" ? var.namespace : var.name
+  create_namespace   = var.create_namespace && !contains(local.builtin_namespaces, local.ns_name)
+  namespace          = local.create_namespace ? kubernetes_namespace_v1.this[0].metadata[0].name : local.ns_name
 
   # The pods get an AWS identity only when they were given something to do with it.
   wants_aws = length(var.iam_statements) > 0
@@ -48,7 +49,7 @@ locals {
 resource "kubernetes_namespace_v1" "this" {
   count = local.create_namespace ? 1 : 0
   metadata {
-    name   = var.namespace
+    name   = local.ns_name
     labels = var.labels
   }
 }
@@ -68,7 +69,7 @@ resource "aws_iam_role" "pods" {
       Action    = "sts:AssumeRoleWithWebIdentity"
       Condition = {
         StringEquals = {
-          "${local.oidc_host}:sub" = "system:serviceaccount:${var.namespace}:${var.name}"
+          "${local.oidc_host}:sub" = "system:serviceaccount:${local.namespace}:${var.name}"
           "${local.oidc_host}:aud" = "sts.amazonaws.com"
         }
       }

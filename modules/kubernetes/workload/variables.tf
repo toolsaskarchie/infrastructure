@@ -4,9 +4,9 @@ variable "name" {
 }
 
 variable "namespace" {
-  description = "Namespace to run in. Created unless it already exists as a built-in (default, kube-system, ...)."
+  description = "Namespace to run in. Empty = one of its own, named after the workload — two workloads defaulting to one shared namespace collided (the second failed with 'namespaces \"apps\" already exists'). Name a shared one and set create_namespace = false to deploy beside another workload."
   type        = string
-  default     = "apps"
+  default     = ""
 }
 
 variable "create_namespace" {
