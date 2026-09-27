@@ -308,4 +308,14 @@ resource "kubernetes_service_v1" "this" {
   # A LoadBalancer's hostname is assigned after creation; wait for it so the
   # output below is an address, not "pending".
   wait_for_load_balancer = var.service_type == "LoadBalancer"
+
+  # THE CLUSTER CHOOSES THE LOAD BALANCER CLASS, not this module. A load
+  # balancer controller (AWS LBC v2.5+ by webhook, and others) stamps
+  # `spec.loadBalancerClass` on every new LoadBalancer Service. The field is
+  # immutable, so without this every later apply — an image rollout included —
+  # planned "delete then create": a new load balancer, a new hostname, an outage
+  # (held by Archie's consequence gate, 2026-09-26).
+  lifecycle {
+    ignore_changes = [spec[0].load_balancer_class]
+  }
 }
