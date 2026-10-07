@@ -9,7 +9,7 @@ The person running this session is the platform engineer (PE), signed in to Arch
 
 ## Rules
 
-1. Read the ticket you're given, and its comments, through Archie. Do what it asks.
+1. Read the ticket you're given and every comment on it. Do what they ask.
 2. When Archie refuses, holds or asks something, read the whole answer and follow it.
 3. If a decision belongs to a person, don't make it. Tell the PE in one line, with the
    link Archie gives you, and wait.
