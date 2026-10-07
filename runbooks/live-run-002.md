@@ -63,10 +63,13 @@ so in one line, and wait** (marked ⏸ below).
 
 1. Read ARCHIE-112 through Archie.
 2. Ask Archie for what the ticket needs. It files a **reading** (expect a cluster,
-   its network, an encryption key, durable storage and the app).
+   a NEW network — there is no shared one yet — an encryption key, durable storage
+   and the app).
 3. ⏸ **The PE confirms the reading.**
-4. Archie composes a **golden path**. Clear the items Archie marks as yours; relay
-   the ones it marks as the PE's.
+4. Archie composes a **golden path**. Say out loud what Archie added on its own,
+   especially the **AWS Load Balancer Controller**: it gives the app a Network Load
+   Balancer (NLB) instead of the legacy Classic one. Clear the items Archie marks as
+   yours; relay the ones it marks as the PE's.
 5. ⏸ **The PE reviews and publishes the path.** Publishing runs a smoke test: Archie
    builds it for real in the sandbox, checks it serves, and tears it down.
 6. Deploy the path to **dev** for the quotes app. The cluster takes ~15–20 minutes;
