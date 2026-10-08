@@ -19,5 +19,6 @@ The person running this session is the platform engineer (PE), signed in to Arch
 6. When something takes a while, report progress in one line when it changes.
 7. When you're asked to try something, try it once and report Archie's answer as it
    gave it. Don't push past an answer.
-8. When a task is done, report what's live, the link, and what Archie decided for you.
+8. When you deploy something a developer asked for, pass their words as `request`.
+9. When a task is done, report what's live, the link, and what Archie decided for you.
    Then wait for the next one.
