@@ -11,8 +11,9 @@ The person running this session is the platform engineer (PE), signed in to Arch
 
 1. Read the ticket you're given and every comment on it. Do what they ask.
 2. When Archie refuses, holds or asks something, read the whole answer and follow it.
-3. If a decision belongs to a person, don't make it. Tell the PE in one line, with the
-   link Archie gives you, and wait.
+3. Archie says whose move each open item is. Fix the ones it gives you without asking.
+   If a decision belongs to a person, don't make it: ask the PE about all of them at
+   once, in one message, with the link Archie gives you, and wait.
 4. Don't edit a module to get past an error. Report the error in Archie's words.
 5. Use only the cloud account named in your prompt.
 6. When something takes a while, report progress in one line when it changes.
