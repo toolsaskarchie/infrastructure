@@ -216,7 +216,6 @@
               "dynamodb:GetItem",
               "dynamodb:UpdateItem"
             ],
-            "effect": "Allow",
             "resources": [
               "${dynamodb.dynamodb_table_arn}"
             ]
