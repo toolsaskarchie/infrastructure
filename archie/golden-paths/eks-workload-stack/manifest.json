@@ -1,0 +1,678 @@
+{
+  "archie_golden_path": {
+    "category": "",
+    "description": "Composed from: ARCHIE-112 \u2014 \"The new quotes page loses everything people send us\" (M. Ferrer, Marketing): We wanted two things on the page: a live count of how many quotes have been read, and a way for visitors to send in their own. The problem is it doesn't keep anything. The count goes back t",
+    "for_when": "ARCHIE-112 \u2014 \"The new quotes page loses everything people send us\" (M",
+    "id": "gp-eks-workload-stack-71407fe6",
+    "name": "EKS + WORKLOAD Stack",
+    "not_for": "",
+    "version": "1.0.0"
+  },
+  "components": [
+    {
+      "blueprint_id": "bp-7d8dab2da719",
+      "blueprint_name": "KMS Key",
+      "config": {
+        "key_statements": [
+          {
+            "actions": [
+              "kms:Encrypt",
+              "kms:Decrypt",
+              "kms:ReEncrypt*",
+              "kms:GenerateDataKey*",
+              "kms:DescribeKey"
+            ],
+            "principals": [
+              {
+                "identifiers": [
+                  "dynamodb.amazonaws.com",
+                  "ec2.amazonaws.com",
+                  "ecr.amazonaws.com",
+                  "eks.amazonaws.com",
+                  "elasticache.amazonaws.com",
+                  "logs.us-east-1.amazonaws.com",
+                  "redshift.amazonaws.com"
+                ],
+                "type": "Service"
+              }
+            ],
+            "resources": [
+              "*"
+            ],
+            "sid": "ArchieAllowServiceUse"
+          },
+          {
+            "actions": [
+              "kms:CreateGrant",
+              "kms:ListGrants",
+              "kms:RevokeGrant"
+            ],
+            "condition": [
+              {
+                "test": "Bool",
+                "values": [
+                  "true"
+                ],
+                "variable": "kms:GrantIsForAWSResource"
+              }
+            ],
+            "principals": [
+              {
+                "identifiers": [
+                  "ecr.amazonaws.com",
+                  "eks.amazonaws.com",
+                  "elasticache.amazonaws.com",
+                  "logs.us-east-1.amazonaws.com",
+                  "redshift.amazonaws.com"
+                ],
+                "type": "Service"
+              }
+            ],
+            "resources": [
+              "*"
+            ],
+            "sid": "ArchieAllowServiceGrants"
+          }
+        ]
+      },
+      "id": "kms",
+      "state_key_hint": "tf-native-state/<tenant>/<app>-kms-<env>/terraform.tfstate",
+      "version": "1.0.0"
+    },
+    {
+      "blueprint_id": "bp-9f3cb1981b6f",
+      "blueprint_name": "Dynamodb Table",
+      "config": {
+        "attributes": [
+          {
+            "name": "pk",
+            "type": "S"
+          }
+        ],
+        "hash_key": "pk",
+        "point_in_time_recovery_enabled": true,
+        "server_side_encryption_kms_key_arn": "${kms.key_arn}"
+      },
+      "id": "dynamodb",
+      "state_key_hint": "tf-native-state/<tenant>/<app>-dynamodb-<env>/terraform.tfstate",
+      "version": "1.0.0"
+    },
+    {
+      "blueprint_id": "bp-9a39f6cc1374",
+      "blueprint_name": "ECR Repository",
+      "config": {
+        "repository_encryption_type": "KMS",
+        "repository_kms_key": "${kms.key_arn}",
+        "repository_lifecycle_policy": "<redacted>"
+      },
+      "id": "ecr",
+      "state_key_hint": "tf-native-state/<tenant>/<app>-ecr-<env>/terraform.tfstate",
+      "version": "1.0.0"
+    },
+    {
+      "blueprint_id": "bp-6df721c6b4e9",
+      "blueprint_name": "VPC",
+      "config": {
+        "enable_nat_gateway": true,
+        "private_subnet_tags": {
+          "kubernetes.io/role/internal-elb": "1"
+        },
+        "public_subnet_tags": {
+          "kubernetes.io/role/elb": "1"
+        },
+        "single_nat_gateway": true
+      },
+      "id": "vpc",
+      "state_key_hint": "tf-native-state/<tenant>/<app>-vpc-<env>/terraform.tfstate",
+      "version": "1.0.0"
+    },
+    {
+      "blueprint_id": "bp-59f626ffe328",
+      "blueprint_name": "EKS Cluster",
+      "config": {
+        "addons": {
+          "coredns": {},
+          "eks-pod-identity-agent": {
+            "before_compute": true
+          },
+          "kube-proxy": {},
+          "vpc-cni": {
+            "before_compute": true
+          }
+        },
+        "cloudwatch_log_group_kms_key_id": "${kms.key_arn}",
+        "create_kms_key": false,
+        "eks_managed_node_groups": {
+          "default": {
+            "instance_types": [
+              "t3.small"
+            ]
+          }
+        },
+        "enable_cluster_creator_admin_permissions": true,
+        "encryption_config": {
+          "provider_key_arn": "${kms.key_arn}"
+        },
+        "endpoint_public_access": true,
+        "endpoint_public_access_cidrs": [
+          "0.0.0.0/0"
+        ],
+        "kubernetes_version": "1.36"
+      },
+      "id": "eks",
+      "state_key_hint": "tf-native-state/<tenant>/<app>-eks-<env>/terraform.tfstate",
+      "version": "1.0.0"
+    },
+    {
+      "blueprint_id": "bp-720883140100",
+      "blueprint_name": "EKS Pod Identity",
+      "config": {
+        "associations": {
+          "lbc": {
+            "cluster_name": "${eks.cluster_name}",
+            "namespace": "kube-system",
+            "service_account": "aws-load-balancer-controller"
+          }
+        },
+        "attach_aws_lb_controller_policy": "<redacted>",
+        "name": "aws-lbc"
+      },
+      "id": "lb_controller_role",
+      "state_key_hint": "tf-native-state/<tenant>/<app>-lb_controller_role-<env>/terraform.tfstate",
+      "version": "1.0.0"
+    },
+    {
+      "blueprint_id": "bp-5a94a27c9ad0",
+      "blueprint_name": "AWS Load Balancer Controller",
+      "config": {
+        "clusterName": "${eks.cluster_name}",
+        "create_namespace": false,
+        "namespace": "kube-system",
+        "region": "us-east-1",
+        "serviceAccount": {
+          "annotations": {
+            "archie.io/iam-role": "${lb_controller_role.iam_role_arn}"
+          },
+          "create": true,
+          "name": "aws-load-balancer-controller"
+        },
+        "vpcId": "${vpc.vpc_id}"
+      },
+      "id": "lb_controller",
+      "state_key_hint": "tf-native-state/<tenant>/<app>-lb_controller-<env>/terraform.tfstate",
+      "version": "1.0.0"
+    },
+    {
+      "blueprint_id": "bp-533d9437f92f",
+      "blueprint_name": "Deployment",
+      "config": {
+        "env": {
+          "QUOTES_TABLE": "${dynamodb.dynamodb_table_arn}"
+        },
+        "iam_statements": [
+          {
+            "actions": [
+              "dynamodb:DescribeTable",
+              "dynamodb:GetItem",
+              "dynamodb:UpdateItem"
+            ],
+            "effect": "Allow",
+            "resources": [
+              "${dynamodb.dynamodb_table_arn}"
+            ]
+          }
+        ],
+        "image": "${ecr.repository_url}",
+        "labels": {
+          "archie.io/lb-controller": "${lb_controller.status}"
+        },
+        "oidc_provider_arn": "${eks.oidc_provider_arn}",
+        "service_annotations": {
+          "service.beta.kubernetes.io/aws-load-balancer-nlb-target-type": "ip",
+          "service.beta.kubernetes.io/aws-load-balancer-scheme": "internet-facing",
+          "service.beta.kubernetes.io/aws-load-balancer-type": "external"
+        }
+      },
+      "id": "workload",
+      "state_key_hint": "tf-native-state/<tenant>/<app>-workload-<env>/terraform.tfstate",
+      "version": "1.0.0"
+    }
+  ],
+  "config": {},
+  "deploy_order": [
+    "kms",
+    "dynamodb",
+    "ecr",
+    "vpc",
+    "eks",
+    "lb_controller_role",
+    "lb_controller",
+    "workload"
+  ],
+  "exported_by": "archie",
+  "note": "Archie is the source of truth for this path. This directory is a projection of it, so that the infrastructure remains yours and runnable if Archie goes away. Editing these files does not change the path.",
+  "open_fields": [
+    {
+      "component": "dynamodb",
+      "input": "name",
+      "type": "text"
+    },
+    {
+      "component": "ecr",
+      "input": "repository_name",
+      "type": "text"
+    },
+    {
+      "component": "vpc",
+      "input": "name",
+      "type": "text"
+    },
+    {
+      "component": "eks",
+      "input": "name",
+      "type": "text"
+    },
+    {
+      "component": "lb_controller",
+      "input": "release_name",
+      "type": "text"
+    },
+    {
+      "component": "workload",
+      "input": "name",
+      "type": "text"
+    },
+    {
+      "component": "workload",
+      "input": "labels",
+      "type": "map"
+    },
+    {
+      "component": "vpc",
+      "input": "private_subnet_tags",
+      "type": "map"
+    },
+    {
+      "component": "vpc",
+      "input": "public_subnet_tags",
+      "type": "map"
+    },
+    {
+      "component": "kms",
+      "input": "tags",
+      "type": "map"
+    }
+  ],
+  "wiring": [
+    {
+      "component": "kms",
+      "inputs": [
+        {
+          "from": null,
+          "how": "governed",
+          "input": "tags",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "map(string)",
+          "type": "map",
+          "value": {
+            "ManagedBy": "Archie"
+          }
+        }
+      ]
+    },
+    {
+      "component": "dynamodb",
+      "inputs": [
+        {
+          "from": null,
+          "how": "unsatisfied",
+          "input": "name",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "string",
+          "type": "text",
+          "value": null
+        },
+        {
+          "from": null,
+          "how": "governed",
+          "input": "tags",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "map(string)",
+          "type": "map",
+          "value": {
+            "ManagedBy": "Archie"
+          }
+        },
+        {
+          "from": "kms.key_arn",
+          "how": "declared",
+          "input": "server_side_encryption_kms_key_arn"
+        }
+      ]
+    },
+    {
+      "component": "ecr",
+      "inputs": [
+        {
+          "from": null,
+          "how": "governed",
+          "input": "tags",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "map(string)",
+          "type": "map",
+          "value": {
+            "ManagedBy": "Archie"
+          }
+        },
+        {
+          "from": null,
+          "how": "unsatisfied",
+          "input": "repository_name",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "string",
+          "type": "text",
+          "value": null
+        },
+        {
+          "from": "kms.key_arn",
+          "how": "declared",
+          "input": "repository_kms_key"
+        }
+      ]
+    },
+    {
+      "component": "vpc",
+      "inputs": [
+        {
+          "from": null,
+          "how": "unsatisfied",
+          "input": "name",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "string",
+          "type": "text",
+          "value": null
+        },
+        {
+          "from": null,
+          "how": "governed",
+          "input": "public_subnet_tags",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "map(string)",
+          "type": "map",
+          "value": {
+            "ManagedBy": "Archie",
+            "kubernetes.io/role/elb": "1"
+          }
+        },
+        {
+          "from": null,
+          "how": "governed",
+          "input": "private_subnet_tags",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "map(string)",
+          "type": "map",
+          "value": {
+            "ManagedBy": "Archie",
+            "kubernetes.io/role/internal-elb": "1"
+          }
+        },
+        {
+          "from": "kms.key_arn",
+          "how": "inferred",
+          "input": "flow_log_cloudwatch_log_group_kms_key_id",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "string",
+          "type": "text",
+          "value": null
+        },
+        {
+          "from": null,
+          "how": "governed",
+          "input": "tags",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "map(string)",
+          "type": "map",
+          "value": {
+            "ManagedBy": "Archie"
+          }
+        }
+      ]
+    },
+    {
+      "component": "eks",
+      "inputs": [
+        {
+          "from": null,
+          "how": "governed",
+          "input": "tags",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "map(string)",
+          "type": "map",
+          "value": {
+            "ManagedBy": "Archie"
+          }
+        },
+        {
+          "from": null,
+          "how": "unsatisfied",
+          "input": "name",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "string",
+          "type": "text",
+          "value": null
+        },
+        {
+          "from": null,
+          "how": "unsatisfied",
+          "input": "endpoint_public_access_cidrs",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "list(string)",
+          "type": "list",
+          "value": null
+        },
+        {
+          "from": "vpc.vpc_id",
+          "how": "exact",
+          "input": "vpc_id",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "string",
+          "type": "text",
+          "value": null
+        },
+        {
+          "from": "vpc.private_subnets",
+          "how": "inferred",
+          "input": "subnet_ids",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "list(string)",
+          "type": "list",
+          "value": null
+        },
+        {
+          "from": "vpc.private_subnets",
+          "how": "inferred",
+          "input": "control_plane_subnet_ids",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "list(string)",
+          "type": "list",
+          "value": null
+        },
+        {
+          "from": null,
+          "how": "governed",
+          "input": "create_security_group",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "bool",
+          "type": "boolean",
+          "value": true
+        },
+        {
+          "from": "kms.key_arn",
+          "how": "declared",
+          "input": "cloudwatch_log_group_kms_key_id"
+        },
+        {
+          "from": "kms.key_arn",
+          "how": "declared",
+          "input": "encryption_config.provider_key_arn"
+        }
+      ]
+    },
+    {
+      "component": "lb_controller_role",
+      "inputs": [
+        {
+          "from": null,
+          "how": "supplied",
+          "input": "name",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "string",
+          "type": "text",
+          "value": "aws-lbc"
+        },
+        {
+          "from": null,
+          "how": "governed",
+          "input": "tags",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "map(string)",
+          "type": "map",
+          "value": {
+            "ManagedBy": "Archie"
+          }
+        },
+        {
+          "from": "eks.cluster_name",
+          "how": "inferred",
+          "input": "association_defaults",
+          "key_sources": {
+            "cluster_name": "cluster_name"
+          },
+          "key_values": {},
+          "tf_type": "object({\n    cluster_name         = optional(string)\n    disable_session_tags = optional(bool)\n    namespace            = optional(string)\n    service_account      = optional(string)\n    role_arn             = optional(string)\n    target_role_arn      = optional(string)\n    tags                 = optional(map(string), {})\n  })",
+          "type": "map",
+          "value": null
+        },
+        {
+          "from": "eks.cluster_name",
+          "how": "declared",
+          "input": "associations.lbc.cluster_name"
+        }
+      ]
+    },
+    {
+      "component": "lb_controller",
+      "inputs": [
+        {
+          "from": null,
+          "how": "unsatisfied",
+          "input": "release_name",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "string",
+          "type": "text",
+          "value": null
+        },
+        {
+          "from": "eks.cluster_name",
+          "how": "declared",
+          "input": "clusterName"
+        },
+        {
+          "from": "lb_controller_role.iam_role_arn",
+          "how": "declared",
+          "input": "serviceAccount.annotations.archie.io/iam-role"
+        },
+        {
+          "from": "vpc.vpc_id",
+          "how": "declared",
+          "input": "vpcId"
+        }
+      ]
+    },
+    {
+      "component": "workload",
+      "inputs": [
+        {
+          "from": null,
+          "how": "unsatisfied",
+          "input": "name",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "string",
+          "type": "text",
+          "value": null
+        },
+        {
+          "from": null,
+          "how": "governed",
+          "input": "labels",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "map(string)",
+          "type": "map",
+          "value": {
+            "ManagedBy": "Archie",
+            "archie.io/lb-controller": "${lb_controller.status}"
+          }
+        },
+        {
+          "from": null,
+          "how": "governed",
+          "input": "tags",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "map(string)",
+          "type": "map",
+          "value": {
+            "ManagedBy": "Archie"
+          }
+        },
+        {
+          "from": "dynamodb.dynamodb_table_arn",
+          "how": "declared",
+          "input": "env.QUOTES_TABLE"
+        },
+        {
+          "from": "dynamodb.dynamodb_table_arn",
+          "how": "declared",
+          "input": "iam_statements[0].resources[0]"
+        },
+        {
+          "from": "ecr.repository_url",
+          "how": "declared",
+          "input": "image"
+        },
+        {
+          "from": "lb_controller.status",
+          "how": "declared",
+          "input": "labels.archie.io/lb-controller"
+        },
+        {
+          "from": "eks.oidc_provider_arn",
+          "how": "declared",
+          "input": "oidc_provider_arn"
+        }
+      ]
+    }
+  ]
+}
