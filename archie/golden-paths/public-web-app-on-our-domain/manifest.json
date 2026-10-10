@@ -1,0 +1,427 @@
+{
+  "archie_golden_path": {
+    "category": "",
+    "description": "A Python request handler on Lambda with encrypted logs, served through CloudFront on an address under askarchie.io with a validated TLS certificate. The DNS and certificate-validation records are written into the askarchie.io zone in askarchie-svc. Built from the live app askarchie-quotes, which served on 2026-10-09.",
+    "for_when": "A Python web page or small web app that people outside the team will open, and that has to be on our own domain and show as secure in the browser \u2014 a campaign page, a public preview, a small HTTP service. The application must expose handler(event, context) in handler.py.",
+    "id": "gp-public-web-app-on-our-domain-04193b51",
+    "name": "Public Web App on Our Domain",
+    "not_for": "Not for anything that is not Python 3.12 or whose entrypoint is not handler.handler, not for container-only applications, and not for anything that has to keep state between requests. Not for an internal preview that does not need a domain \u2014 use Public Web App.",
+    "version": "1.0.0"
+  },
+  "components": [
+    {
+      "blueprint_id": "bp-723536d6f203",
+      "blueprint_name": "TLS Certificate",
+      "config": {
+        "create_route53_records": false,
+        "tags": {
+          "Environment": "sandbox",
+          "ManagedBy": "Archie",
+          "Owner": "agent@askarchie.io"
+        },
+        "validate_certificate": false,
+        "validation_method": "DNS",
+        "zone_id": "Z04127342JQGOUEDW9JAG"
+      },
+      "id": "certificate",
+      "state_key_hint": "tf-native-state/<tenant>/<app>-certificate-<env>/terraform.tfstate",
+      "version": "1.0.0"
+    },
+    {
+      "blueprint_id": "bp-7d8dab2da719",
+      "blueprint_name": "KMS Key",
+      "config": {
+        "key_statements": [
+          {
+            "actions": [
+              "kms:Encrypt",
+              "kms:Decrypt",
+              "kms:ReEncrypt*",
+              "kms:GenerateDataKey*",
+              "kms:DescribeKey"
+            ],
+            "principals": [
+              {
+                "identifiers": [
+                  "ecr.amazonaws.com",
+                  "lambda.amazonaws.com",
+                  "logs.us-east-1.amazonaws.com",
+                  "s3.amazonaws.com"
+                ],
+                "type": "Service"
+              }
+            ],
+            "resources": [
+              "*"
+            ],
+            "sid": "ArchieAllowServiceUse"
+          },
+          {
+            "actions": [
+              "kms:CreateGrant",
+              "kms:ListGrants",
+              "kms:RevokeGrant"
+            ],
+            "condition": [
+              {
+                "test": "Bool",
+                "values": [
+                  "true"
+                ],
+                "variable": "kms:GrantIsForAWSResource"
+              }
+            ],
+            "principals": [
+              {
+                "identifiers": [
+                  "ecr.amazonaws.com"
+                ],
+                "type": "Service"
+              }
+            ],
+            "resources": [
+              "*"
+            ],
+            "sid": "ArchieAllowServiceGrants"
+          }
+        ],
+        "tags": {
+          "Environment": "sandbox",
+          "Owner": "agent@askarchie.io"
+        }
+      },
+      "id": "kms",
+      "state_key_hint": "tf-native-state/<tenant>/<app>-kms-<env>/terraform.tfstate",
+      "version": "1.0.0"
+    },
+    {
+      "blueprint_id": "bp-799d19ad49d7",
+      "blueprint_name": "Lambda Function",
+      "config": {
+        "cloudwatch_logs_kms_key_id": "${kms.key_arn}",
+        "create_lambda_function_url": true,
+        "handler": "handler.handler",
+        "kms_key_arn": "${kms.key_arn}",
+        "runtime": "python3.12",
+        "s3_kms_key_id": "${kms.key_arn}",
+        "tags": {
+          "Environment": "sandbox",
+          "Owner": "agent@askarchie.io"
+        }
+      },
+      "id": "application",
+      "state_key_hint": "tf-native-state/<tenant>/<app>-application-<env>/terraform.tfstate",
+      "version": "1.0.0"
+    },
+    {
+      "blueprint_id": "bp-723536d6f203",
+      "blueprint_name": "TLS Certificate",
+      "config": {
+        "acm_certificate_domain_validation_options": "${certificate.acm_certificate_domain_validation_options}",
+        "create_certificate": false,
+        "create_route53_records": true,
+        "create_route53_records_only": true,
+        "distinct_domain_names": "${certificate.distinct_domain_names}",
+        "tags": {
+          "Environment": "sandbox",
+          "ManagedBy": "Archie",
+          "Owner": "agent@askarchie.io"
+        },
+        "validation_method": "DNS",
+        "zone_id": "Z04127342JQGOUEDW9JAG"
+      },
+      "id": "certificate_validation",
+      "state_key_hint": "tf-native-state/<tenant>/<app>-certificate_validation-<env>/terraform.tfstate",
+      "version": "1.0.0"
+    },
+    {
+      "blueprint_id": "bp-abc914d7ccf8",
+      "blueprint_name": "CDN",
+      "config": {
+        "aliases": "${certificate.distinct_domain_names}",
+        "default_cache_behavior": {
+          "default_ttl": "0",
+          "max_ttl": "0",
+          "min_ttl": "0",
+          "target_origin_id": "application",
+          "viewer_protocol_policy": "<redacted>"
+        },
+        "origin": {
+          "application": {
+            "custom_origin_config": {
+              "http_port": "80",
+              "https_port": "443",
+              "origin_protocol_policy": "<redacted>",
+              "origin_ssl_protocols": [
+                "TLSv1.2"
+              ]
+            },
+            "domain_name": "${application.lambda_function_url}"
+          }
+        },
+        "tags": {
+          "Environment": "sandbox",
+          "ManagedBy": "Archie",
+          "Owner": "agent@askarchie.io"
+        },
+        "viewer_certificate": {
+          "acm_certificate_arn": "${certificate.acm_certificate_arn}",
+          "ssl_support_method": "sni-only"
+        }
+      },
+      "id": "cdn",
+      "state_key_hint": "tf-native-state/<tenant>/<app>-cdn-<env>/terraform.tfstate",
+      "version": "1.0.0"
+    },
+    {
+      "blueprint_id": "bp-b1ce03ef96c0",
+      "blueprint_name": "DNS Records",
+      "config": {
+        "records": [
+          {
+            "alias": {
+              "name": "${cdn.cloudfront_distribution_domain_name}",
+              "zone_id": "${cdn.cloudfront_distribution_hosted_zone_id}"
+            },
+            "full_name_override": true,
+            "name": "${certificate.distinct_domain_names.0}",
+            "type": "A"
+          }
+        ],
+        "zone_id": "Z04127342JQGOUEDW9JAG",
+        "zone_name": "askarchie.io"
+      },
+      "id": "dns",
+      "state_key_hint": "tf-native-state/<tenant>/<app>-dns-<env>/terraform.tfstate",
+      "version": "1.0.0"
+    }
+  ],
+  "config": {},
+  "deploy_order": [
+    "certificate",
+    "kms",
+    "application",
+    "certificate_validation",
+    "cdn",
+    "dns"
+  ],
+  "exported_by": "archie",
+  "note": "Archie is the source of truth for this path. This directory is a projection of it, so that the infrastructure remains yours and runnable if Archie goes away. Editing these files does not change the path.",
+  "open_fields": [
+    {
+      "component": "certificate",
+      "input": "domain_name",
+      "type": "text"
+    },
+    {
+      "component": "application",
+      "input": "function_name",
+      "type": "text"
+    },
+    {
+      "component": "certificate",
+      "input": "tags",
+      "type": "map"
+    }
+  ],
+  "wiring": [
+    {
+      "component": "certificate",
+      "inputs": [
+        {
+          "from": null,
+          "how": "unsatisfied",
+          "input": "domain_name",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "string",
+          "type": "text",
+          "value": null
+        },
+        {
+          "from": null,
+          "how": "governed",
+          "input": "tags",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "map(string)",
+          "type": "map",
+          "value": {
+            "Environment": "sandbox",
+            "ManagedBy": "Archie",
+            "Owner": "agent@askarchie.io"
+          }
+        }
+      ]
+    },
+    {
+      "component": "kms",
+      "inputs": [
+        {
+          "from": null,
+          "how": "governed",
+          "input": "tags",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "map(string)",
+          "type": "map",
+          "value": {
+            "Environment": "sandbox",
+            "ManagedBy": "Archie",
+            "Owner": "agent@askarchie.io"
+          }
+        }
+      ]
+    },
+    {
+      "component": "application",
+      "inputs": [
+        {
+          "from": null,
+          "how": "unsatisfied",
+          "input": "function_name",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "string",
+          "type": "text",
+          "value": null
+        },
+        {
+          "from": null,
+          "how": "governed",
+          "input": "tags",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "map(string)",
+          "type": "map",
+          "value": {
+            "Environment": "sandbox",
+            "ManagedBy": "Archie",
+            "Owner": "agent@askarchie.io"
+          }
+        },
+        {
+          "from": "kms.key_arn",
+          "how": "declared",
+          "input": "cloudwatch_logs_kms_key_id"
+        },
+        {
+          "from": "kms.key_arn",
+          "how": "declared",
+          "input": "kms_key_arn"
+        },
+        {
+          "from": "kms.key_arn",
+          "how": "declared",
+          "input": "s3_kms_key_id"
+        }
+      ]
+    },
+    {
+      "component": "certificate_validation",
+      "inputs": [
+        {
+          "from": null,
+          "how": "unsatisfied",
+          "input": "domain_name",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "string",
+          "type": "text",
+          "value": null
+        },
+        {
+          "from": null,
+          "how": "governed",
+          "input": "tags",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "map(string)",
+          "type": "map",
+          "value": {
+            "Environment": "sandbox",
+            "ManagedBy": "Archie",
+            "Owner": "agent@askarchie.io"
+          }
+        },
+        {
+          "from": "certificate.acm_certificate_domain_validation_options",
+          "how": "declared",
+          "input": "acm_certificate_domain_validation_options"
+        },
+        {
+          "from": "certificate.distinct_domain_names",
+          "how": "declared",
+          "input": "distinct_domain_names"
+        }
+      ]
+    },
+    {
+      "component": "cdn",
+      "inputs": [
+        {
+          "from": null,
+          "how": "governed",
+          "input": "tags",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "map(string)",
+          "type": "map",
+          "value": {
+            "Environment": "sandbox",
+            "ManagedBy": "Archie",
+            "Owner": "agent@askarchie.io"
+          }
+        },
+        {
+          "from": null,
+          "how": "supplied",
+          "input": "default_cache_behavior",
+          "key_sources": {},
+          "key_values": {},
+          "tf_type": "object({\n    allowed_methods           = optional(list(string), [\"GET\", \"HEAD\", \"OPTIONS\"])\n    cache_policy_id           = optional(string)\n    cache_policy_key          = optional(string)\n    cache_policy_name         = optional(string)\n    cached_methods            = optional(list(string), [\"GET\", \"HEAD\"])\n    compress                  = optional(bool, true)\n    default_ttl               = optional(number)\n    field_level_encryption_id = optional(string)\n    forwarded_values = optional(object({\n      cookies = object({\n        forward           = optional(string, \"none\")\n        whitelisted_names = optional(list(string))\n      })\n      headers                 = optional(list(string))\n      query_string            = optional(bool, false)\n      query_string_cache_keys = optional(list(string))\n      }),\n      {\n        cookies = {\n          forward = \"none\"\n        }\n        query_string = false\n      }\n    )\n    function_association = optional(map(object({\n      event_type   = optional(string)\n      function_arn = optional(string)\n      function_key = optional(string)\n    })))\n    grpc_config = optional(object({\n      enabled = optional(bool)\n    }))\n    lambda_function_association = optional(map(object({\n      event_type   = optional(string)\n      include_body = optional(bool)\n      lambda_arn   = string\n    })))\n    max_ttl                      = optional(number)\n    min_ttl                      = optional(number)\n    origin_request_policy_id     = optional(string)\n    origin_request_policy_key    = optional(string)\n    origin_request_policy_name   = optional(string)\n    realtime_log_config_arn      = optional(string)\n    response_headers_policy_id   = optional(string)\n    response_headers_policy_key  = optional(string)\n    response_headers_policy_name = optional(string)\n    smooth_streaming             = optional(bool)\n    target_origin_id             = string\n    trusted_key_groups           = optional(list(string))\n    trusted_signers              = optional(list(string))\n    viewer_protocol_policy       = optional(string, \"https-only\")\n  })",
+          "type": "map",
+          "value": {
+            "target_origin_id": "application",
+            "viewer_protocol_policy": "<redacted>"
+          }
+        },
+        {
+          "from": "certificate.distinct_domain_names",
+          "how": "declared",
+          "input": "aliases"
+        },
+        {
+          "from": "application.lambda_function_url",
+          "how": "declared",
+          "input": "origin.application.domain_name"
+        },
+        {
+          "from": "certificate.acm_certificate_arn",
+          "how": "declared",
+          "input": "viewer_certificate.acm_certificate_arn"
+        }
+      ]
+    },
+    {
+      "component": "dns",
+      "inputs": [
+        {
+          "from": "cdn.cloudfront_distribution_domain_name",
+          "how": "declared",
+          "input": "records[0].alias.name"
+        },
+        {
+          "from": "cdn.cloudfront_distribution_hosted_zone_id",
+          "how": "declared",
+          "input": "records[0].alias.zone_id"
+        },
+        {
+          "from": "certificate.distinct_domain_names.0",
+          "how": "declared",
+          "input": "records[0].name"
+        }
+      ]
+    }
+  ]
+}
