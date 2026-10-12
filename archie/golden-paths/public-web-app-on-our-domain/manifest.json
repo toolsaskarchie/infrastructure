@@ -21,8 +21,7 @@
           "Owner": "agent@askarchie.io"
         },
         "validate_certificate": false,
-        "validation_method": "DNS",
-        "zone_id": "Z04127342JQGOUEDW9JAG"
+        "validation_method": "DNS"
       },
       "id": "certificate",
       "state_key_hint": "tf-native-state/<tenant>/<app>-certificate-<env>/terraform.tfstate",
@@ -175,7 +174,6 @@
             "type": "A"
           }
         ],
-        "zone_id": "Z04127342JQGOUEDW9JAG",
         "zone_name": "askarchie.io"
       },
       "id": "dns",
