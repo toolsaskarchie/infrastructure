@@ -176,7 +176,7 @@
           }
         ],
         "zone_id": "Z04127342JQGOUEDW9JAG",
-        "zone_name": null
+        "zone_name": "askarchie.io"
       },
       "id": "dns",
       "state_key_hint": "tf-native-state/<tenant>/<app>-dns-<env>/terraform.tfstate",
