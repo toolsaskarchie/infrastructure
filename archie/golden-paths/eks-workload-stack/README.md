@@ -14,7 +14,8 @@ your bucket are keyed to. A tidier single root would match none of them.
 5. `cd eks` — `tofu init -backend-config=...` then `tofu apply`
 6. `cd lb_controller_role` — `tofu init -backend-config=...` then `tofu apply`
 7. `cd lb_controller` — `tofu init -backend-config=...` then `tofu apply`
-8. `cd workload` — `tofu init -backend-config=...` then `tofu apply`
+8. `cd argocd` — `tofu init -backend-config=...` then `tofu apply`
+9. `cd workload` — `tofu init -backend-config=...` then `tofu apply`
 
 Outputs feed the next component's inputs; `manifest.json` says which. Archie passes them between applies, so running these by hand means copying the values across yourself.
 
