@@ -154,6 +154,9 @@
           "provider_key_arn": "${kms.key_arn}"
         },
         "endpoint_public_access": true,
+        "endpoint_public_access_cidrs": [
+          "0.0.0.0/0"
+        ],
         "kubernetes_version": "1.36"
       },
       "id": "eks",
@@ -276,11 +279,6 @@
       "component": "eks",
       "input": "name",
       "type": "text"
-    },
-    {
-      "component": "eks",
-      "input": "endpoint_public_access_cidrs",
-      "type": "list"
     },
     {
       "component": "lb_controller",
